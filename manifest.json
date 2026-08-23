@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "GridLand",
+  "version": "0.3.7",
+  "description": "A clean, customizable new-tab icon grid with pages, iOS-style groups, quiet icon discovery, cropping, animated page transitions, and local backups.",
+  "permissions": [
+    "storage",
+    "favicon",
+    "downloads"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "icons": {
+    "16": "icons/gridland16.png",
+    "48": "icons/gridland48.png",
+    "128": "icons/gridland128.png"
+  }
+}

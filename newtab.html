@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GridLand</title>
+  <link rel="stylesheet" href="newtab.css">
+</head>
+<body>
+  <div id="wallpaperLayer" aria-hidden="true"></div>
+  <div id="gradientLayer" aria-hidden="true"></div>
+  <div id="shadeLayer" aria-hidden="true"></div>
+
+  <main id="app">
+    <button id="settingsButton" class="corner-button" type="button" aria-label="Open settings">⚙</button>
+
+    <section id="pageViewport">
+      <button id="prevPage" class="page-arrow left" type="button" aria-label="Previous page">‹</button>
+      <div id="grid" class="grid"></div>
+      <button id="nextPage" class="page-arrow right" type="button" aria-label="Next page">›</button>
+    </section>
+
+    <div id="pageDots" class="page-dots"></div>
+
+    <div id="editBanner" class="edit-banner hidden">
+      <strong>Edit mode</strong>
+      <span>Drag to move • center-drop to group • hold at an edge to move pages</span>
+      <button id="deletePageEdit" type="button">Delete page</button>
+      <button id="doneEditing" type="button">Done</button>
+    </div>
+    <div id="edgeLeftIndicator" class="edge-slot-indicator left" aria-hidden="true"></div>
+    <div id="edgeRightIndicator" class="edge-slot-indicator right" aria-hidden="true"></div>
+  </main>
+
+  <div id="panelScrim" class="panel-scrim hidden"></div>
+  <aside id="settingsPanel" class="side-panel" aria-hidden="true">
+    <header class="panel-header"><h1>GridLand</h1><button id="closeSettings" class="icon-button" type="button">×</button></header>
+    <div class="panel-body">
+      <section class="settings-card">
+        <h2>Sites</h2>
+        <div class="button-row"><button id="addSiteButton" class="primary-button" type="button">+ Add site</button></div>
+      </section>
+
+      <section class="settings-card">
+        <h2>Layout</h2>
+        <div class="two-col">
+          <label>Columns<select id="columnsSelect"></select></label>
+          <label>Rows<select id="rowsSelect"></select></label>
+        </div>
+        <label class="range-row">Screen scale <output id="screenScaleOut"></output><input id="screenScale" type="range" min="70" max="130" step="1"></label>
+        <label class="toggle-row"><span>Show page indicators</span><input id="showDots" type="checkbox"></label>
+        <label class="toggle-row"><span>Show page arrows</span><input id="showArrows" type="checkbox"></label>
+      </section>
+
+      <section class="settings-card">
+        <h2>Icons</h2>
+        <label class="range-row">Icon size <output id="iconSizeOut"></output><input id="iconSize" type="range" min="32" max="128" step="1"></label>
+        <label class="range-row">Rounded corners <output id="iconRadiusOut"></output><input id="iconRadius" type="range" min="0" max="50" step="1"></label>
+        <label class="range-row">Opacity <output id="iconOpacityOut"></output><input id="iconOpacity" type="range" min="25" max="100" step="1"></label>
+        <label class="range-row">Label size <output id="labelSizeOut"></output><input id="labelSize" type="range" min="9" max="22" step="1"></label>
+        <label class="toggle-row"><span>Icon shadow</span><input id="iconShadow" type="checkbox"></label>
+        <label class="toggle-row"><span>Show labels</span><input id="showLabels" type="checkbox"></label>
+      </section>
+
+      <section class="settings-card">
+        <h2>Background</h2>
+        <label>Background mode
+          <select id="backgroundMode"><option value="gradient">Gradient</option><option value="wallpaper">Wallpaper</option><option value="wallpaper-gradient">Wallpaper + gradient</option></select>
+        </label>
+
+        <div id="gradientOptions">
+          <div class="color-line"><label>Top color<input id="topColor" type="color"></label></div>
+          <label class="toggle-row"><span>Middle color</span><input id="middleEnabled" type="checkbox"></label>
+          <div id="middleColorRow" class="color-line"><label>Middle<input id="middleColor" type="color"></label></div>
+          <label class="range-row" id="middlePositionRow">Middle position <output id="middlePositionOut"></output><input id="middlePosition" type="range" min="10" max="90" step="1"></label>
+          <label class="toggle-row"><span>Bottom color</span><input id="bottomEnabled" type="checkbox"></label>
+          <div id="bottomColorRow" class="color-line"><label>Bottom<input id="bottomColor" type="color"></label></div>
+        </div>
+
+        <div id="wallpaperOptions">
+          <label class="file-label">Wallpaper<input id="wallpaperInput" type="file" accept="image/*"></label>
+          <div class="button-row"><button id="clearWallpaper" type="button">Clear wallpaper</button></div>
+          <label class="range-row">Dim wallpaper <output id="wallpaperDimOut"></output><input id="wallpaperDim" type="range" min="0" max="80" step="1"></label>
+          <label class="range-row">Blur amount <output id="wallpaperBlurOut"></output><input id="wallpaperBlur" type="range" min="0" max="30" step="1"></label>
+        </div>
+      </section>
+
+      <section class="settings-card">
+        <h2>Backup</h2>
+        <div class="button-row"><button id="exportButton" type="button">Export settings</button><label class="button-like">Import settings<input id="importInput" type="file" accept="application/json,.json"></label></div>
+        <p class="small-note">Backup includes pages, groups, custom icons, wallpaper and appearance settings.</p>
+      </section>
+    </div>
+  </aside>
+
+  <dialog id="siteDialog">
+    <form id="siteForm">
+      <div class="dialog-header"><h2 id="siteDialogTitle">Add site</h2><button id="closeSiteDialog" class="icon-button" type="button">×</button></div>
+      <label>URL<input id="siteUrl" type="text" placeholder="www.example.com"></label>
+      <label>Visible title<input id="siteTitle" type="text" placeholder="Example" maxlength="80"></label>
+      <div class="icon-lookup-header"><span>Icon</span><div class="button-row compact"><button id="lookupIconButton" type="button">Find site images</button><button id="webImageSearchButton" type="button">Search web</button></div></div>
+      <p id="iconLookupStatus" class="small-note"></p>
+      <div id="iconChoices" class="icon-choices"></div>
+      <div class="button-row"><label class="button-like">Upload icon<input id="customIconInput" type="file" accept="image/*"></label><button id="cropSelectedButton" type="button" disabled>Crop selected icon</button></div>
+      <div class="dialog-actions"><button id="deleteSiteButton" class="danger-button hidden" type="button">Delete</button><span class="spacer"></span><button id="cancelSiteButton" type="button">Cancel</button><button class="primary-button" type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="cropDialog" class="crop-dialog">
+    <div class="dialog-header"><h2>Customize icon</h2><button id="closeCropDialog" class="icon-button" type="button">×</button></div>
+    <div class="crop-layout">
+      <div class="crop-stage-wrap"><canvas id="cropCanvas" width="360" height="360"></canvas><div class="crop-help">Drag image to position</div></div>
+      <div class="crop-controls">
+        <label>Zoom<input id="cropZoom" type="range" min="50" max="400" step="1" value="100"></label>
+        <div class="button-row"><button id="rotateLeft" type="button">↶</button><button id="rotateRight" type="button">↷</button><button id="cropReset" type="button">Reset</button></div>
+        <label class="toggle-row"><span>Transparent background</span><input id="cropTransparent" type="checkbox" checked></label>
+        <label id="cropBgRow">Background color<input id="cropBg" type="color" value="#ffffff"></label>
+      </div>
+    </div>
+    <div class="dialog-actions"><span class="spacer"></span><button id="cropCancel" type="button">Cancel</button><button id="cropApply" class="primary-button" type="button">Use crop</button></div>
+  </dialog>
+
+  <dialog id="folderDialog" class="folder-dialog">
+    <div class="dialog-header"><h2 id="folderTitleDisplay">Group</h2><button id="closeFolderDialog" class="icon-button" type="button">×</button></div>
+    <div id="folderGrid" class="folder-grid"></div>
+  </dialog>
+
+  <dialog id="deletePageDialog">
+    <div class="dialog-header"><h2>Delete page?</h2><button id="closeDeletePageDialog" class="icon-button" type="button">×</button></div>
+    <p id="deletePageMessage">Delete this page?</p>
+    <div class="dialog-actions"><span class="spacer"></span><button id="cancelDeletePage" type="button">Cancel</button><button id="continueDeletePage" class="danger-button" type="button">Continue</button></div>
+  </dialog>
+
+  <dialog id="groupEditDialog">
+    <form id="groupEditForm">
+      <div class="dialog-header"><h2>Edit group</h2><button id="closeGroupEditDialog" class="icon-button" type="button">×</button></div>
+      <label>Group name<input id="groupNameInput" type="text" maxlength="80"></label>
+      <div class="dialog-actions"><button id="deleteGroupButton" class="danger-button" type="button">Delete group</button><span class="spacer"></span><button id="cancelGroupEdit" type="button">Cancel</button><button class="primary-button" type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+  <script src="newtab.js"></script>
+</body>
+</html>
