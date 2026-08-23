@@ -19,10 +19,10 @@ GridLand stores those local image assets in IndexedDB. Export builds a single JS
 If you remove GridLand, reinstall it, and import the backup, those uploaded/cropped images are restored.
 
 ## New installation
-1. Extract `GridLand_v0.3.7.zip` to a permanent folder, for example `Documents\Chrome Extensions\GridLand`.
-2. Open `chrome://extensions`.
-3. Enable **Developer mode**.
-4. Click **Load unpacked**.
+1. Download to a new permanent folder, for example `Documents\Chrome Extensions\GridLand`.
+2. In Chrome, open `chrome://extensions`.
+3. Enable **Developer mode** tick box.
+4. Click **Load unpacked** button.
 5. Select the folder containing `manifest.json`.
 6. Open a new tab.
 
@@ -30,4 +30,4 @@ Developer mode must remain enabled while using the unpacked build.
 
 ## Permissions
 
-GridLand requests `storage`, `favicon`, and `downloads`. Website host access remains optional and is requested only when you explicitly ask GridLand to inspect a site or load a remote image for cropping.
+GridLand requests `storage`, `favicon`, and `downloads`. Website host access remains optional and is requested only when you explicitly ask GridLand to inspect a site or load a remote image icons for cropping.
