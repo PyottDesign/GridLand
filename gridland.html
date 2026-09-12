@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>GridLand</title>
-  <link rel="stylesheet" href="newtab.css">
+  <link rel="stylesheet" href="gridland.css">
 </head>
 <body>
   <div id="wallpaperLayer" aria-hidden="true"></div>
@@ -12,7 +12,7 @@
   <div id="shadeLayer" aria-hidden="true"></div>
 
   <main id="app">
-    <button id="settingsButton" class="corner-button" type="button" aria-label="Open settings">⚙</button>
+    <button id="settingsButton" class="corner-button" type="button" aria-label="Open settings"><img src="icons/gridland-settings.png" alt=""></button>
 
     <section id="pageViewport">
       <button id="prevPage" class="page-arrow left" type="button" aria-label="Previous page">‹</button>
@@ -90,6 +90,7 @@
         <div class="button-row"><button id="exportButton" type="button">Export settings</button><label class="button-like">Import settings<input id="importInput" type="file" accept="application/json,.json"></label></div>
         <p class="small-note">Backup includes pages, groups, custom icons, wallpaper and appearance settings.</p>
       </section>
+      <a class="settings-footer-link" href="https://www.pyottdesign.com" target="_blank" rel="noopener noreferrer">www.pyottdesign.com</a>
     </div>
   </aside>
 
@@ -140,6 +141,6 @@
   </dialog>
 
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
-  <script src="newtab.js"></script>
+  <script src="gridland.js"></script>
 </body>
 </html>
