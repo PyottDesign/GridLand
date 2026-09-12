@@ -1,4 +1,4 @@
-# GridLand v0.3.8
+# GridLand v0.3.11
 GridLand is a local Manifest V3 Chrome new-tab extension with adjustable icon grids, pages, groups, custom backgrounds, icon cropping, and profile-local backups.
 
 ## Backups and image assets
