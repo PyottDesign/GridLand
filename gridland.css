@@ -6,47 +6,57 @@
   --label-size: 12px;
   --screen-scale: 1;
   --grid-cols: 5;
-  --grid-rows: 3
+  --grid-rows: 3;
 }
 
 * {
-  box-sizing: border-box
+  box-sizing: border-box;
 }
 
-html,body {
+html,
+body {
   margin: 0;
   width: 100%;
   min-height: 100%;
   overflow: hidden;
-  font-family: Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   color: #fff;
-  background: #111827
+  background: #111827;
 }
 
 body {
-  min-height: 100vh
+  min-height: 100vh;
 }
 
 /* Background layers and main viewport */
-#wallpaperLayer,#gradientLayer,#shadeLayer {
+#wallpaperLayer,
+#gradientLayer,
+#shadeLayer {
   position: fixed;
   inset: 0;
-  pointer-events: none
+  pointer-events: none;
 }
 
 #wallpaperLayer {
   background-position: center;
   background-size: cover;
   transform: scale(1.04);
-  z-index: 0
+  z-index: 0;
 }
 
 #gradientLayer {
-  z-index: 1
+  z-index: 1;
 }
 
 #shadeLayer {
-  z-index: 2
+  z-index: 2;
 }
 
 #app {
@@ -54,7 +64,7 @@ body {
   z-index: 3;
   min-height: 100vh;
   display: grid;
-  grid-template-rows: 1fr auto
+  grid-template-rows: 1fr auto;
 }
 
 .corner-button {
@@ -68,12 +78,13 @@ body {
   padding: 5px;
   cursor: pointer;
   z-index: 10;
-  opacity: .2;
-  transition: opacity .16s ease
+  opacity: 0.2;
+  transition: opacity 0.16s ease;
 }
 
-.corner-button:hover,.corner-button:focus-visible {
-  opacity: 1
+.corner-button:hover,
+.corner-button:focus-visible {
+  opacity: 1;
 }
 
 .corner-button img {
@@ -81,7 +92,7 @@ body {
   height: 100%;
   display: block;
   object-fit: contain;
-  pointer-events: none
+  pointer-events: none;
 }
 
 #pageViewport {
@@ -89,19 +100,19 @@ body {
   display: grid;
   place-items: center;
   min-height: calc(100vh - 58px);
-  padding: 72px 88px 36px
+  padding: 72px 88px 36px;
 }
 
 .grid {
-  width: min(90vw,1500px);
-  height: min(72vh,790px);
+  width: min(90vw, 1500px);
+  height: min(72vh, 790px);
   display: grid;
-  grid-template-columns: repeat(var(--grid-cols),1fr);
-  grid-template-rows: repeat(var(--grid-rows),1fr);
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  grid-template-rows: repeat(var(--grid-rows), 1fr);
   align-items: center;
   justify-items: center;
   transform: scale(var(--screen-scale));
-  transform-origin: center
+  transform-origin: center;
 }
 
 .grid-cell {
@@ -111,12 +122,12 @@ body {
   place-items: center;
   position: relative;
   min-width: 0;
-  min-height: 0
+  min-height: 0;
 }
 
 /* Shortcut tiles */
 .shortcut {
-  width: max(calc(var(--icon-size) + 38px),82px);
+  width: max(calc(var(--icon-size) + 38px), 82px);
   max-width: 100%;
   min-height: calc(var(--icon-size) + 38px);
   display: flex;
@@ -130,11 +141,11 @@ body {
   color: inherit;
   cursor: pointer;
   user-select: none;
-  position: relative
+  position: relative;
 }
 
 .shortcut.dragging {
-  opacity: .28
+  opacity: 0.28;
 }
 
 .shortcut-icon {
@@ -145,19 +156,21 @@ body {
   opacity: var(--icon-opacity);
   display: grid;
   place-items: center;
-  background: rgba(255,255,255,.12);
-  transition: transform .12s ease,outline .12s ease
+  background: rgba(255, 255, 255, 0.12);
+  transition:
+    transform 0.12s ease,
+    outline 0.12s ease;
 }
 
 .shortcut-icon img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block
+  display: block;
 }
 
 body.icon-shadow .shortcut-icon {
-  box-shadow: 0 8px 22px rgba(0,0,0,.34)
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.34);
 }
 
 .shortcut-label {
@@ -170,11 +183,11 @@ body.icon-shadow .shortcut-icon {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 4px rgba(0,0,0,.9)
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
 }
 
 body.hide-labels .shortcut-label {
-  display: none
+  display: none;
 }
 
 .generated-icon {
@@ -184,7 +197,7 @@ body.hide-labels .shortcut-label {
   place-items: center;
   color: #fff;
   font-weight: 700;
-  font-size: 24px
+  font-size: 24px;
 }
 
 .folder-preview {
@@ -192,15 +205,16 @@ body.hide-labels .shortcut-label {
   height: 100%;
   padding: 10%;
   display: grid;
-  grid-template-columns: repeat(var(--folder-preview-cols,3),1fr);
-  grid-template-rows: repeat(var(--folder-preview-rows,3),1fr);
+  grid-template-columns: repeat(var(--folder-preview-cols, 3), 1fr);
+  grid-template-rows: repeat(var(--folder-preview-rows, 3), 1fr);
   gap: 5%;
   align-content: center;
   justify-content: center;
-  background: rgba(220,225,235,.64)
+  background: rgba(220, 225, 235, 0.64);
 }
 
-.folder-preview img,.folder-preview .mini-fallback {
+.folder-preview img,
+.folder-preview .mini-fallback {
   width: 100%;
   height: auto;
   aspect-ratio: 1/1;
@@ -211,23 +225,24 @@ body.hide-labels .shortcut-label {
   justify-self: center;
   border-radius: 28%;
   object-fit: cover;
-  display: block
+  display: block;
 }
 
 .folder-preview .mini-fallback {
-  font-size: 4px
+  font-size: 4px;
 }
 
 .mini-fallback {
   display: grid;
   place-items: center;
-  background: rgba(40,50,65,.45);
+  background: rgba(40, 50, 65, 0.45);
   font-size: 7px;
-  font-weight: 700
+  font-weight: 700;
 }
 
 /* Edit mode */
-.edit-pencil,.edit-delete {
+.edit-pencil,
+.edit-delete {
   position: absolute;
   top: -3px;
   width: 23px;
@@ -240,87 +255,90 @@ body.hide-labels .shortcut-label {
   font-size: 13px;
   cursor: pointer;
   z-index: 4;
-  box-shadow: 0 2px 6px rgba(0,0,0,.28);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
   padding: 0;
   line-height: 1;
-  font-family: Arial,sans-serif;
-  text-align: center
+  font-family: Arial, sans-serif;
+  text-align: center;
 }
 
 .edit-pencil {
   left: 4px;
-  background: #5f6772
+  background: #5f6772;
 }
 
 .edit-delete {
   right: 4px;
-  background: #e46666
+  background: #e46666;
 }
 
 body.editing .shortcut:not(.dragging) {
-  animation: jiggle .22s infinite alternate ease-in-out
+  animation: jiggle 0.22s infinite alternate ease-in-out;
 }
 
 body.editing .shortcut:nth-child(2n) {
-  animation-delay: -.11s
+  animation-delay: -0.11s;
 }
 
 @keyframes jiggle {
   from {
-    transform: rotate(-1.2deg)
+    transform: rotate(-1.2deg);
   }
 
   to {
-    transform: rotate(1.2deg)
+    transform: rotate(1.2deg);
   }
 }
 
 .empty-slot {
   width: calc(var(--icon-size) + 14px);
   height: calc(var(--icon-size) + 14px);
-  border: 1px dashed rgba(255,255,255,.3);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
   border-radius: 27%;
   display: none;
   place-items: center;
-  color: rgba(255,255,255,.48);
+  color: rgba(255, 255, 255, 0.48);
   font-size: 25px;
   cursor: pointer;
-  background: rgba(255,255,255,.02)
+  background: rgba(255, 255, 255, 0.02);
 }
 
-body.editing .empty-slot,.grid.page-empty .empty-slot {
-  display: grid
+body.editing .empty-slot,
+.grid.page-empty .empty-slot {
+  display: grid;
 }
 
-.empty-slot:hover,.empty-slot.empty-target {
-  background: rgba(255,255,255,.14);
-  border-color: rgba(255,255,255,.72);
-  transform: scale(1.05)
+.empty-slot:hover,
+.empty-slot.empty-target {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.72);
+  transform: scale(1.05);
 }
 
-.shortcut.insert-before:before,.shortcut.insert-after:after {
+.shortcut.insert-before:before,
+.shortcut.insert-after:after {
   content: "";
   position: absolute;
   top: 10%;
   bottom: 28%;
   width: 4px;
   border-radius: 4px;
-  background: rgba(255,255,255,.95);
-  box-shadow: 0 0 0 2px rgba(0,0,0,.15)
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.15);
 }
 
 .shortcut.insert-before:before {
-  left: -8px
+  left: -8px;
 }
 
 .shortcut.insert-after:after {
-  right: -8px
+  right: -8px;
 }
 
 .shortcut.group-target .shortcut-icon {
-  outline: 3px solid rgba(255,255,255,.92);
+  outline: 3px solid rgba(255, 255, 255, 0.92);
   outline-offset: 6px;
-  transform: scale(1.08)
+  transform: scale(1.08);
 }
 
 /* Page navigation */
@@ -333,7 +351,7 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   border: 0;
   border-radius: 50%;
   color: #fff;
-  background: rgba(255,255,255,.11);
+  background: rgba(255, 255, 255, 0.11);
   font-size: 34px;
   line-height: 1;
   padding: 0;
@@ -341,23 +359,23 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   place-items: center;
   cursor: pointer;
   backdrop-filter: blur(8px);
-  opacity: .55
+  opacity: 0.55;
 }
 
 .page-arrow:hover {
-  opacity: .95
+  opacity: 0.95;
 }
 
 .page-arrow.left {
-  left: 22px
+  left: 22px;
 }
 
 .page-arrow.right {
-  right: 22px
+  right: 22px;
 }
 
 .page-arrow.hidden-by-state {
-  display: none
+  display: none;
 }
 
 .page-dots {
@@ -366,7 +384,7 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding-bottom: 14px
+  padding-bottom: 14px;
 }
 
 .page-dot {
@@ -375,16 +393,16 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   border: 0;
   padding: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,.38);
-  cursor: pointer
+  background: rgba(255, 255, 255, 0.38);
+  cursor: pointer;
 }
 
 .page-dot.active {
-  background: #fff
+  background: #fff;
 }
 
 .page-dots.hidden-by-state {
-  display: none
+  display: none;
 }
 
 .edit-banner {
@@ -395,29 +413,29 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   display: flex;
   align-items: center;
   gap: 13px;
-  background: rgba(15,20,30,.76);
-  border: 1px solid rgba(255,255,255,.13);
+  background: rgba(15, 20, 30, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 14px;
   padding: 9px 10px 9px 15px;
   backdrop-filter: blur(14px);
   z-index: 20;
-  box-shadow: 0 12px 38px rgba(0,0,0,.24)
+  box-shadow: 0 12px 38px rgba(0, 0, 0, 0.24);
 }
 
 .edit-banner span {
-  color: rgba(255,255,255,.7);
-  font-size: 12px
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
 }
 
 .edit-banner button {
   border: 0;
   border-radius: 9px;
   padding: 8px 13px;
-  cursor: pointer
+  cursor: pointer;
 }
 
 .hidden {
-  display: none!important
+  display: none !important;
 }
 
 /* Settings panel */
@@ -425,7 +443,7 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: rgba(0,0,0,.12)
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .side-panel {
@@ -433,18 +451,18 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   z-index: 31;
   top: 0;
   right: 0;
-  width: min(400px,94vw);
+  width: min(400px, 94vw);
   height: 100vh;
   background: #f3f3f3;
   color: #333;
   transform: translateX(105%);
-  transition: transform .2s ease;
-  box-shadow: -12px 0 34px rgba(0,0,0,.16);
-  overflow: hidden
+  transition: transform 0.2s ease;
+  box-shadow: -12px 0 34px rgba(0, 0, 0, 0.16);
+  overflow: hidden;
 }
 
 .side-panel.open {
-  transform: translateX(0)
+  transform: translateX(0);
 }
 
 .panel-header {
@@ -454,75 +472,76 @@ body.editing .empty-slot,.grid.page-empty .empty-slot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 22px
+  padding: 0 22px;
 }
 
 .panel-header h1 {
   font-size: 25px;
   font-weight: 500;
-  margin: 0
+  margin: 0;
 }
 
 .panel-body {
   height: calc(100vh - 72px);
   overflow-y: auto;
-  padding: 18px
+  padding: 18px;
 }
 
 .settings-card {
   background: #fff;
   padding: 18px;
-  margin-bottom: 16px
+  margin-bottom: 16px;
 }
 
 .settings-card h2 {
   margin: 0 0 16px;
-  font-size: 18px
+  font-size: 18px;
 }
 
 label {
   display: block;
   font-size: 13px;
   color: #444;
-  margin: 12px 0
+  margin: 12px 0;
 }
 
-input[type=text],select {
+input[type="text"],
+select {
   width: 100%;
   margin-top: 6px;
   padding: 10px 11px;
   border: 1px solid #d7d7d7;
   border-radius: 8px;
   background: #fff;
-  font: inherit
+  font: inherit;
 }
 
 .two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px
+  gap: 12px;
 }
 
 .range-row {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  column-gap: 10px
+  column-gap: 10px;
 }
 
 .range-row input {
   grid-column: 1/-1;
-  width: 100%
+  width: 100%;
 }
 
 .toggle-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px
+  gap: 14px;
 }
 
-.color-line input[type=color] {
+.color-line input[type="color"] {
   display: block;
   width: 100%;
   height: 40px;
@@ -530,65 +549,68 @@ input[type=text],select {
   border-radius: 8px;
   margin-top: 7px;
   padding: 2px;
-  background: #fff
+  background: #fff;
 }
 
-button,.button-like {
-  font: inherit
+button,
+.button-like {
+  font: inherit;
 }
 
-.primary-button,.button-row button,.button-like {
+.primary-button,
+.button-row button,
+.button-like {
   border: 1px solid #d2d2d2;
   background: #f7f7f7;
   color: #333;
   border-radius: 8px;
   padding: 9px 12px;
-  cursor: pointer
+  cursor: pointer;
 }
 
 .primary-button {
   background: #333;
   color: #fff;
-  border-color: #333
+  border-color: #333;
 }
 
 .button-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px
+  margin-top: 12px;
 }
 
 .button-like {
   display: inline-flex;
   align-items: center;
-  margin: 0
+  margin: 0;
 }
 
 .button-like input {
-  display: none
+  display: none;
 }
 
 .file-label input {
   display: block;
   width: 100%;
-  margin-top: 8px
+  margin-top: 8px;
 }
 
 .small-note {
   margin: 8px 0 0;
   color: #777;
   font-size: 12px;
-  line-height: 1.45
+  line-height: 1.45;
 }
 
 .danger-button {
-  border: 1px solid #d76060!important;
-  background: #fff!important;
-  color: #b53b3b!important;
+  border: 1px solid #d76060 !important;
+  background: #fff !important;
+  color: #b53b3b !important;
   border-radius: 8px;
   padding: 9px 12px;
-  cursor: pointer
+  cursor: pointer;
 }
 
 .icon-button {
@@ -596,23 +618,23 @@ button,.button-like {
   background: transparent;
   font-size: 28px;
   color: inherit;
-  cursor: pointer
+  cursor: pointer;
 }
 
 /* Dialogs */
 dialog {
-  width: min(560px,calc(100vw - 28px));
+  width: min(560px, calc(100vw - 28px));
   border: 0;
   border-radius: 16px;
   padding: 20px;
   color: #2f3338;
   background: #f7f7f7;
-  box-shadow: 0 24px 80px rgba(0,0,0,.35)
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
 dialog::backdrop {
-  background: rgba(0,0,0,.38);
-  backdrop-filter: blur(2px)
+  background: rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(2px);
 }
 
 .dialog-header {
@@ -620,12 +642,12 @@ dialog::backdrop {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px
+  margin-bottom: 14px;
 }
 
 .dialog-header h2 {
   margin: 0;
-  font-size: 22px
+  font-size: 22px;
 }
 
 .icon-lookup-header {
@@ -633,7 +655,7 @@ dialog::backdrop {
   justify-content: space-between;
   align-items: center;
   margin-top: 16px;
-  font-size: 13px
+  font-size: 13px;
 }
 
 .icon-lookup-header button {
@@ -641,16 +663,16 @@ dialog::backdrop {
   border-radius: 8px;
   background: #fff;
   padding: 7px 10px;
-  cursor: pointer
+  cursor: pointer;
 }
 
 .icon-choices {
   display: grid;
-  grid-template-columns: repeat(5,minmax(0,1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
   margin: 10px 0 14px;
   max-height: 230px;
-  overflow-y: auto
+  overflow-y: auto;
 }
 
 .icon-choice {
@@ -662,29 +684,29 @@ dialog::backdrop {
   cursor: pointer;
   display: grid;
   place-items: center;
-  position: relative
+  position: relative;
 }
 
 .icon-choice.selected {
-  border-color: #333
+  border-color: #333;
 }
 
 .icon-choice img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  border-radius: 20%
+  border-radius: 20%;
 }
 
 .dialog-actions {
   margin-top: 20px;
   display: flex;
   align-items: center;
-  gap: 9px
+  gap: 9px;
 }
 
 .dialog-actions .spacer {
-  flex: 1
+  flex: 1;
 }
 
 .dialog-actions button {
@@ -692,45 +714,53 @@ dialog::backdrop {
   background: #fff;
   border-radius: 8px;
   padding: 9px 13px;
-  cursor: pointer
+  cursor: pointer;
 }
 
 .dialog-actions .primary-button {
   background: #333;
-  color: #fff
+  color: #fff;
 }
 
 /* Crop editor */
 .crop-dialog {
-  width: min(900px,calc(100vw - 30px))
+  width: min(900px, calc(100vw - 30px));
 }
 
 .crop-layout {
   display: grid;
-  grid-template-columns: minmax(300px,1fr) 260px;
+  grid-template-columns: minmax(300px, 1fr) 260px;
   gap: 26px;
-  align-items: start
+  align-items: start;
 }
 
 .crop-stage-wrap {
   position: relative;
-  background-image: linear-gradient(45deg,#bbb 25%,transparent 25%),linear-gradient(-45deg,#bbb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#bbb 75%),linear-gradient(-45deg,transparent 75%,#bbb 75%);
+  background-image:
+    linear-gradient(45deg, #bbb 25%, transparent 25%),
+    linear-gradient(-45deg, #bbb 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #bbb 75%),
+    linear-gradient(-45deg, transparent 75%, #bbb 75%);
   background-size: 24px 24px;
-  background-position: 0 0,0 12px,12px -12px,-12px 0;
+  background-position:
+    0 0,
+    0 12px,
+    12px -12px,
+    -12px 0;
   border: 2px solid #5da9ff;
-  width: min(100%,460px);
-  aspect-ratio: 1
+  width: min(100%, 460px);
+  aspect-ratio: 1;
 }
 
 .crop-stage-wrap canvas {
   width: 100%;
   height: 100%;
   display: block;
-  cursor: grab
+  cursor: grab;
 }
 
 .crop-stage-wrap canvas:active {
-  cursor: grabbing
+  cursor: grabbing;
 }
 
 .crop-help {
@@ -738,43 +768,43 @@ dialog::backdrop {
   left: 10px;
   bottom: 8px;
   font-size: 11px;
-  background: rgba(0,0,0,.5);
+  background: rgba(0, 0, 0, 0.5);
   color: #fff;
   padding: 4px 7px;
-  border-radius: 5px
+  border-radius: 5px;
 }
 
 .crop-controls {
-  padding-top: 4px
+  padding-top: 4px;
 }
 
-.crop-controls input[type=range] {
-  width: 100%
+.crop-controls input[type="range"] {
+  width: 100%;
 }
 
 /* Group dialog */
 .folder-dialog {
-  width: min(760px,calc(100vw - 36px));
-  background: rgba(34,39,55,.55);
+  width: min(760px, calc(100vw - 36px));
+  background: rgba(34, 39, 55, 0.55);
   color: #fff;
   backdrop-filter: blur(28px) saturate(1.15);
-  border: 1px solid rgba(255,255,255,.18);
-  overflow: hidden
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  overflow: hidden;
 }
 
 .folder-dialog::backdrop {
-  background: rgba(0,0,0,.18);
-  backdrop-filter: blur(8px)
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(8px);
 }
 
 .folder-grid {
   display: grid;
-  grid-template-columns: repeat(5,minmax(0,1fr));
-  grid-template-rows: repeat(4,minmax(0,1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
   gap: 12px 14px;
   min-height: 0;
   padding: 14px 4px 8px;
-  overflow: hidden
+  overflow: hidden;
 }
 
 .folder-grid .shortcut {
@@ -783,17 +813,17 @@ dialog::backdrop {
   min-width: 0;
   max-width: none;
   min-height: 108px;
-  padding: 4px
+  padding: 4px;
 }
 
 .folder-grid .shortcut-icon {
-  width: min(var(--icon-size),78px);
-  height: min(var(--icon-size),78px)
+  width: min(var(--icon-size), 78px);
+  height: min(var(--icon-size), 78px);
 }
 
 .folder-grid .shortcut-label {
   max-width: 100%;
-  text-shadow: 0 1px 4px rgba(0,0,0,.7)
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 
 .toast {
@@ -804,58 +834,58 @@ dialog::backdrop {
   transform: translateX(-50%);
   padding: 10px 14px;
   border-radius: 10px;
-  background: rgba(20,25,35,.92);
+  background: rgba(20, 25, 35, 0.92);
   color: #fff;
-  box-shadow: 0 8px 30px rgba(0,0,0,.25);
-  font-size: 13px
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+  font-size: 13px;
 }
 
-@media(max-width:720px) {
+@media (max-width: 720px) {
   .folder-dialog {
     width: calc(100vw - 20px);
-    padding: 14px
+    padding: 14px;
   }
 
   .folder-grid {
-    gap: 8px 6px
+    gap: 8px 6px;
   }
 
   .folder-grid .shortcut {
-    min-height: 88px
+    min-height: 88px;
   }
 
   .folder-grid .shortcut-icon {
-    width: min(var(--icon-size),58px);
-    height: min(var(--icon-size),58px)
+    width: min(var(--icon-size), 58px);
+    height: min(var(--icon-size), 58px);
   }
 
   .folder-grid .shortcut-label {
-    font-size: min(var(--label-size),10px)
+    font-size: min(var(--label-size), 10px);
   }
 
   #pageViewport {
-    padding: 70px 34px 54px
+    padding: 70px 34px 54px;
   }
 
   .grid {
     width: 100%;
-    height: 72vh
+    height: 72vh;
   }
 
   .page-arrow {
-    display: none!important
+    display: none !important;
   }
 
   .edit-banner span {
-    display: none
+    display: none;
   }
 
   .crop-layout {
-    grid-template-columns: 1fr
+    grid-template-columns: 1fr;
   }
 
   .icon-choices {
-    grid-template-columns: repeat(4,1fr)
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -867,38 +897,40 @@ dialog::backdrop {
   height: 84px;
   transform: translateY(-50%);
   border-radius: 999px;
-  background: rgba(255,255,255,.9);
-  box-shadow: 0 0 0 5px rgba(255,255,255,.13),0 0 18px rgba(255,255,255,.35);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 0 0 5px rgba(255, 255, 255, 0.13),
+    0 0 18px rgba(255, 255, 255, 0.35);
   z-index: 19;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .12s ease
+  transition: opacity 0.12s ease;
 }
 
 .edge-slot-indicator.left {
-  left: 28px
+  left: 28px;
 }
 
 .edge-slot-indicator.right {
-  right: 28px
+  right: 28px;
 }
 
 .edge-slot-indicator.active {
-  opacity: 1
+  opacity: 1;
 }
 
 .button-row.compact {
   margin: 0;
-  gap: 6px
+  gap: 6px;
 }
 
 .button-row.compact button {
-  padding: 7px 9px
+  padding: 7px 9px;
 }
 
 .edit-banner #deletePageEdit:disabled {
-  opacity: .38;
-  cursor: not-allowed
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 .folder-dialog body.editing {
@@ -909,15 +941,15 @@ dialog::backdrop {
   top: 70px;
   right: 18px;
   z-index: 22;
-  background: rgba(135,35,35,.78);
+  background: rgba(135, 35, 35, 0.78);
   color: #fff;
-  border: 1px solid rgba(255,255,255,.18);
-  backdrop-filter: blur(12px)
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
 }
 
 #deletePageEdit:disabled {
-  background: rgba(70,70,75,.45);
-  color: rgba(255,255,255,.5)
+  background: rgba(70, 70, 75, 0.45);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* Page transition clone */
@@ -927,18 +959,20 @@ dialog::backdrop {
   contain: layout;
 }
 
-.grid-slide-ghost .shortcut-icon,.grid.page-transitioning .shortcut-icon {
-  opacity: var(--icon-opacity)!important
+.grid-slide-ghost .shortcut-icon,
+.grid.page-transitioning .shortcut-icon {
+  opacity: var(--icon-opacity) !important;
 }
 
-.grid-slide-ghost .edit-pencil, .grid-slide-ghost .edit-delete {
+.grid-slide-ghost .edit-pencil,
+.grid-slide-ghost .edit-delete {
   pointer-events: none;
 }
 
 /* Group edit banner and settings footer */
 
-.folder-dialog>.edit-banner {
-  z-index: 2147483647
+.folder-dialog > .edit-banner {
+  z-index: 2147483647;
 }
 
 .settings-footer-link {
@@ -947,26 +981,26 @@ dialog::backdrop {
   color: #555;
   text-align: center;
   font-size: 12px;
-  text-decoration: none
+  text-decoration: none;
 }
 
 .settings-footer-link:hover {
   text-decoration: underline;
-  color: #222
+  color: #222;
 }
 
 /* Page-transition and group-preview rendering */
 
 .grid-slide-ghost {
-  visibility: visible!important
+  visibility: visible !important;
 }
 
 .grid.page-transitioning {
-  backface-visibility: hidden
+  backface-visibility: hidden;
 }
 
 .folder-preview img {
-  object-position: center
+  object-position: center;
 }
 
 /* Generated initials inside group previews */
@@ -984,7 +1018,7 @@ dialog::backdrop {
   place-items: center;
   text-align: center;
   line-height: 1;
-  font-size: var(--folder-preview-font-size,7px);
+  font-size: var(--folder-preview-font-size, 7px);
   font-weight: 700;
-  overflow: hidden
+  overflow: hidden;
 }

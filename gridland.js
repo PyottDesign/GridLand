@@ -10,8 +10,8 @@
   const ASSET_STORE_NAME = 'assets';
   const ASSET_DB_VERSION = 1;
 
-  const $ = (selector) => document.querySelector(selector);
-  const $$ = (selector) => [...document.querySelectorAll(selector)];
+  const $ = selector => document.querySelector(selector);
+  const $$ = selector => [...document.querySelectorAll(selector)];
 
   const els = {
     grid: $('#grid'),
@@ -169,7 +169,7 @@
     lastY: 0,
   };
 
-  const clone = (value) => JSON.parse(JSON.stringify(value));
+  const clone = value => JSON.parse(JSON.stringify(value));
 
   // ---------------------------------------------------------------------------
   // State normalization and persistence
@@ -177,51 +177,67 @@
 
   function pruneRawEmptyPages(s) {
     if (!Array.isArray(s.pages) || !s.pages.length) {
-      s.pages = [ {
-        id: crypto.randomUUID(), items: []
-      }];
+      s.pages = [
+        {
+          id: crypto.randomUUID(),
+          items: [],
+        },
+      ];
       s.currentPage = 0;
-      return
+      return;
     }
-    if (s.pages.length === 1)return;
-    const currentId = s.pages[Math.max(0, Math.min(Number(s.currentPage) || 0, s.pages.length - 1))]?.id;
+    if (s.pages.length === 1) return;
+    const currentId =
+      s.pages[Math.max(0, Math.min(Number(s.currentPage) || 0, s.pages.length - 1))]?.id;
     const kept = s.pages.filter(p => Array.isArray(p.items) && p.items.length > 0);
-    s.pages = kept.length ? kept: [ {
-      id: crypto.randomUUID(), items: []
-    }];
+    s.pages = kept.length
+      ? kept
+      : [
+          {
+            id: crypto.randomUUID(),
+            items: [],
+          },
+        ];
     const ci = s.pages.findIndex(p => p.id === currentId);
-    s.currentPage = ci >= 0 ? ci: Math.min(Number(s.currentPage) || 0, s.pages.length - 1)
+    s.currentPage = ci >= 0 ? ci : Math.min(Number(s.currentPage) || 0, s.pages.length - 1);
   }
   function normalize(raw) {
-    const oldVersion = Number(raw?.version) || 0, s = raw && typeof raw === 'object' ? raw: clone(defaultState);
+    const oldVersion = Number(raw?.version) || 0,
+      s = raw && typeof raw === 'object' ? raw : clone(defaultState);
     s.settings = {
-      ...clone(defaultState.settings), ...(s.settings || {
-      })
+      ...clone(defaultState.settings),
+      ...(s.settings || {}),
     };
-    s.pages = Array.isArray(s.pages) && s.pages.length ? s.pages: [ {
-      id: crypto.randomUUID(), items: []
-    }];
-    s.pages = s.pages.map(p => ( {
-      id: p.id || crypto.randomUUID(), items: Array.isArray(p.items) ? p.items: []
+    s.pages =
+      Array.isArray(s.pages) && s.pages.length
+        ? s.pages
+        : [
+            {
+              id: crypto.randomUUID(),
+              items: [],
+            },
+          ];
+    s.pages = s.pages.map(p => ({
+      id: p.id || crypto.randomUUID(),
+      items: Array.isArray(p.items) ? p.items : [],
     }));
-    s.folders = s.folders && typeof s.folders === 'object' ? s.folders: {
-    };
+    s.folders = s.folders && typeof s.folders === 'object' ? s.folders : {};
     s.groupCounter = Number(s.groupCounter) || 1;
     if (oldVersion < 2) {
-      s.settings.showArrows = false
+      s.settings.showArrows = false;
     }
     pruneRawEmptyPages(s);
     s.version = 3;
     s.currentPage = Math.max(0, Math.min(Number(s.currentPage) || 0, s.pages.length - 1));
-    return s
+    return s;
   }
   async function load() {
-    state = normalize((await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY])
+    state = normalize((await chrome.storage.local.get(STORAGE_KEY))[STORAGE_KEY]);
   }
   async function save() {
-    await chrome.storage.local.set( {
-      [STORAGE_KEY]: state
-    })
+    await chrome.storage.local.set({
+      [STORAGE_KEY]: state,
+    });
   }
   // ---------------------------------------------------------------------------
   // IndexedDB asset storage
@@ -231,11 +247,12 @@
     return new Promise((res, rej) => {
       const r = indexedDB.open(ASSET_DB_NAME, ASSET_DB_VERSION);
       r.onupgradeneeded = () => {
-        if (!r.result.objectStoreNames.contains(ASSET_STORE_NAME))r.result.createObjectStore(ASSET_STORE_NAME)
+        if (!r.result.objectStoreNames.contains(ASSET_STORE_NAME))
+          r.result.createObjectStore(ASSET_STORE_NAME);
       };
       r.onsuccess = () => res(r.result);
-      r.onerror = () => rej(r.error)
-    })
+      r.onerror = () => rej(r.error);
+    });
   }
   async function assetPut(k, v) {
     const db = await odb();
@@ -244,170 +261,182 @@
       tx.objectStore(ASSET_STORE_NAME).put(v, k);
       tx.oncomplete = () => {
         db.close();
-        res()
+        res();
       };
       tx.onerror = () => {
         db.close();
-        rej(tx.error)
-      }
-    })
+        rej(tx.error);
+      };
+    });
   }
   async function assetGet(k) {
-    if (!k)return null;
+    if (!k) return null;
     const db = await odb();
     return new Promise((res, rej) => {
-      const tx = db.transaction(ASSET_STORE_NAME, 'readonly'), r = tx.objectStore(ASSET_STORE_NAME).get(k);
+      const tx = db.transaction(ASSET_STORE_NAME, 'readonly'),
+        r = tx.objectStore(ASSET_STORE_NAME).get(k);
       r.onsuccess = () => {
         db.close();
-        res(r.result || null)
+        res(r.result || null);
       };
       r.onerror = () => {
         db.close();
-        rej(r.error)
-      }
-    })
+        rej(r.error);
+      };
+    });
   }
   async function assetDel(k) {
-    if (!k)return;
+    if (!k) return;
     const db = await odb();
     return new Promise((res, rej) => {
       const tx = db.transaction(ASSET_STORE_NAME, 'readwrite');
       tx.objectStore(ASSET_STORE_NAME).delete(k);
       tx.oncomplete = () => {
         db.close();
-        res()
+        res();
       };
       tx.onerror = () => {
         db.close();
-        rej(tx.error)
-      }
-    })
+        rej(tx.error);
+      };
+    });
   }
   async function assetAll() {
     const db = await odb();
     return new Promise((res, rej) => {
-      const out = {
-      }, tx = db.transaction(ASSET_STORE_NAME, 'readonly'), r = tx.objectStore(ASSET_STORE_NAME).openCursor();
+      const out = {},
+        tx = db.transaction(ASSET_STORE_NAME, 'readonly'),
+        r = tx.objectStore(ASSET_STORE_NAME).openCursor();
       r.onsuccess = () => {
         const c = r.result;
         if (c) {
           out[c.key] = c.value;
-          c.continue()
+          c.continue();
         }
       };
       tx.oncomplete = () => {
         db.close();
-        res(out)
+        res(out);
       };
       tx.onerror = () => {
         db.close();
-        rej(tx.error)
-      }
-    })
+        rej(tx.error);
+      };
+    });
   }
   async function assetReplace(m) {
     const db = await odb();
     return new Promise((res, rej) => {
-      const tx = db.transaction(ASSET_STORE_NAME, 'readwrite'), st = tx.objectStore(ASSET_STORE_NAME);
+      const tx = db.transaction(ASSET_STORE_NAME, 'readwrite'),
+        st = tx.objectStore(ASSET_STORE_NAME);
       st.clear();
-      Object.entries(m || {
-      }).forEach(([k, v]) => st.put(v, k));
+      Object.entries(m || {}).forEach(([k, v]) => st.put(v, k));
       tx.oncomplete = () => {
         db.close();
-        res()
+        res();
       };
       tx.onerror = () => {
         db.close();
-        rej(tx.error)
-      }
-    })
+        rej(tx.error);
+      };
+    });
   }
-  const toDataUrl = f => new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result);
-    r.onerror = rej;
-    r.readAsDataURL(f)
-  });
+  const toDataUrl = f =>
+    new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result);
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
   // ---------------------------------------------------------------------------
   // URL and icon helpers
   // ---------------------------------------------------------------------------
 
   function navUrl(v) {
     v = (v || '').trim();
-    if (!v)return'about:blank';
-    if (/^[a-z][a-z0-9+.-]*:/i.test(v))return v;
-    return'https://' + v
+    if (!v) return 'about:blank';
+    if (/^[a-z][a-z0-9+.-]*:/i.test(v)) return v;
+    return 'https://' + v;
   }
   function siteOrigin(v) {
     try {
       const u = new URL(navUrl(v));
-      return`${u.protocol}//${u.host}/*`
+      return `${u.protocol}//${u.host}/*`;
     } catch {
-      return null
+      return null;
     }
   }
   function favUrl(v, size = 128) {
-    return`chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(navUrl(v))}&size=${size}`
+    return `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(navUrl(v))}&size=${size}`;
   }
   function initials(t, u) {
     let x = (t || '').trim();
     if (x) {
       const w = x.split(/\s+/);
-      return((w[0]?.[0] || '') + (w[1]?.[0] || w[0]?.[1] || '')).toUpperCase()
+      return ((w[0]?.[0] || '') + (w[1]?.[0] || w[0]?.[1] || '')).toUpperCase();
     }
     try {
-      return new URL(navUrl(u)).hostname.replace(/^www\./, '').slice(0, 2).toUpperCase()
+      return new URL(navUrl(u)).hostname
+        .replace(/^www\./, '')
+        .slice(0, 2)
+        .toUpperCase();
     } catch {
-      return'GL'
+      return 'GL';
     }
   }
   function genColor(s) {
     let h = 0;
-    for (const c of s || 'GridLand')h = ((h << 5) - h + c.charCodeAt(0)) | 0;
-    return`hsl(${Math.abs(h)%360} 72% 46%)`
+    for (const c of s || 'GridLand') h = ((h << 5) - h + c.charCodeAt(0)) | 0;
+    return `hsl(${Math.abs(h) % 360} 72% 46%)`;
   }
   // ---------------------------------------------------------------------------
   // Page and item helpers
   // ---------------------------------------------------------------------------
 
   function cap() {
-    return state.settings.cols * state.settings.rows
+    return state.settings.cols * state.settings.rows;
   }
   function page() {
-    return state.pages[state.currentPage]
+    return state.pages[state.currentPage];
   }
   function locate(id) {
-    for (let p = 0;
-    p < state.pages.length;
-    p++) {
+    for (let p = 0; p < state.pages.length; p++) {
       let i = state.pages[p].items.findIndex(x => x.id === id);
-      if (i >= 0)return {
-        item: state.pages[p].items[i], container: state.pages[p].items, index: i, pageIndex: p
-      }
+      if (i >= 0)
+        return {
+          item: state.pages[p].items[i],
+          container: state.pages[p].items,
+          index: i,
+          pageIndex: p,
+        };
     }
     for (const f of Object.values(state.folders)) {
       let i = f.items.findIndex(x => x.id === id);
-      if (i >= 0)return {
-        item: f.items[i], container: f.items, index: i, folderId: f.id
-      }
+      if (i >= 0)
+        return {
+          item: f.items[i],
+          container: f.items,
+          index: i,
+          folderId: f.id,
+        };
     }
-    return null
+    return null;
   }
   function take(id) {
     const f = locate(id);
-    return f ? f.container.splice(f.index, 1)[0]: null
+    return f ? f.container.splice(f.index, 1)[0] : null;
   }
   function freePage(start = 0) {
-    for (let i = Math.max(0, start);
-    i < state.pages.length;
-    i++)if (state.pages[i].items.length < cap())return i;
-    state.pages.push( {
-      id: crypto.randomUUID(), items: []
+    for (let i = Math.max(0, start); i < state.pages.length; i++)
+      if (state.pages[i].items.length < cap()) return i;
+    state.pages.push({
+      id: crypto.randomUUID(),
+      items: [],
     });
-    return state.pages.length - 1
+    return state.pages.length - 1;
   }
   function pruneEmptyPages() {
-    pruneRawEmptyPages(state)
+    pruneRawEmptyPages(state);
   }
   // ---------------------------------------------------------------------------
   // Shared UI helpers and appearance
@@ -417,64 +446,70 @@
     els.toast.textContent = m;
     els.toast.classList.remove('hidden');
     clearTimeout(toast.t);
-    toast.t = setTimeout(() => els.toast.classList.add('hidden'), 2200)
+    toast.t = setTimeout(() => els.toast.classList.add('hidden'), 2200);
   }
   function placeEditBanner() {
-    const host = editing && els.folderDialog.open ? els.folderDialog: $('#app');
-    if (host && els.editBanner.parentElement !== host)host.appendChild(els.editBanner)
+    const host = editing && els.folderDialog.open ? els.folderDialog : $('#app');
+    if (host && els.editBanner.parentElement !== host) host.appendChild(els.editBanner);
   }
   function gradientCss() {
     const s = state.settings;
-    if (!s.middleEnabled && !s.bottomEnabled)return s.topColor;
-    if (!s.middleEnabled && s.bottomEnabled)return`linear-gradient(to bottom,${s.topColor} 0%,${s.bottomColor} 100%)`;
-    if (s.middleEnabled && !s.bottomEnabled)return`linear-gradient(to bottom,${s.topColor} 0%,${s.middleColor} 100%)`;
-    return`linear-gradient(to bottom,${s.topColor} 0%,${s.middleColor} ${s.middlePosition}%,${s.bottomColor} 100%)`
+    if (!s.middleEnabled && !s.bottomEnabled) return s.topColor;
+    if (!s.middleEnabled && s.bottomEnabled)
+      return `linear-gradient(to bottom,${s.topColor} 0%,${s.bottomColor} 100%)`;
+    if (s.middleEnabled && !s.bottomEnabled)
+      return `linear-gradient(to bottom,${s.topColor} 0%,${s.middleColor} 100%)`;
+    return `linear-gradient(to bottom,${s.topColor} 0%,${s.middleColor} ${s.middlePosition}%,${s.bottomColor} 100%)`;
   }
   async function appearance() {
-    const s = state.settings, root = document.documentElement;
+    const s = state.settings,
+      root = document.documentElement;
     root.style.setProperty('--grid-cols', s.cols);
     root.style.setProperty('--grid-rows', s.rows);
     root.style.setProperty('--icon-size', s.iconSize + 'px');
     root.style.setProperty('--icon-radius', s.iconRadius + '%');
-    root.style.setProperty('--icon-opacity', s.iconOpacity/100);
+    root.style.setProperty('--icon-opacity', s.iconOpacity / 100);
     root.style.setProperty('--label-size', s.labelSize + 'px');
-    root.style.setProperty('--screen-scale', s.screenScale/100);
+    root.style.setProperty('--screen-scale', s.screenScale / 100);
     document.body.classList.toggle('icon-shadow', s.iconShadow);
     document.body.classList.toggle('hide-labels', !s.showLabels);
     els.gradientLayer.style.background = gradientCss();
     const wp = await assetGet(s.wallpaperAssetId);
-    els.wallpaperLayer.style.backgroundImage = wp ? `url("${wp}")`: 'none';
+    els.wallpaperLayer.style.backgroundImage = wp ? `url("${wp}")` : 'none';
     els.wallpaperLayer.style.filter = `blur(${s.wallpaperBlur}px)`;
-    els.shadeLayer.style.background = `rgba(0,0,0,${s.wallpaperDim/100})`;
+    els.shadeLayer.style.background = `rgba(0,0,0,${s.wallpaperDim / 100})`;
     if (s.backgroundMode === 'gradient') {
       els.wallpaperLayer.style.opacity = 0;
       els.gradientLayer.style.opacity = 1;
-      els.gradientLayer.style.mixBlendMode = 'normal'
+      els.gradientLayer.style.mixBlendMode = 'normal';
     } else if (s.backgroundMode === 'wallpaper') {
-      els.wallpaperLayer.style.opacity = wp ? 1: 0;
-      els.gradientLayer.style.opacity = wp ? 0: 1;
-      els.gradientLayer.style.mixBlendMode = 'normal'
+      els.wallpaperLayer.style.opacity = wp ? 1 : 0;
+      els.gradientLayer.style.opacity = wp ? 0 : 1;
+      els.gradientLayer.style.mixBlendMode = 'normal';
     } else {
-      els.wallpaperLayer.style.opacity = wp ? 1: 0;
-      els.gradientLayer.style.opacity = wp ? 0.58: 1;
-      els.gradientLayer.style.mixBlendMode = wp ? 'soft-light': 'normal'
+      els.wallpaperLayer.style.opacity = wp ? 1 : 0;
+      els.gradientLayer.style.opacity = wp ? 0.58 : 1;
+      els.gradientLayer.style.mixBlendMode = wp ? 'soft-light' : 'normal';
     }
     updateBackgroundUi();
-    updatePagerVisibility()
+    updatePagerVisibility();
   }
   function updatePagerVisibility() {
     const multi = state.pages.length > 1;
     els.pageDots.classList.toggle('hidden-by-state', !(multi && state.settings.showDots));
     els.prevPage.classList.toggle('hidden-by-state', !(multi && state.settings.showArrows));
-    els.nextPage.classList.toggle('hidden-by-state', !(multi && state.settings.showArrows))
+    els.nextPage.classList.toggle('hidden-by-state', !(multi && state.settings.showArrows));
   }
   function updateBackgroundUi() {
     const m = state.settings.backgroundMode;
     els.gradientOptions.classList.toggle('hidden', m === 'wallpaper');
     els.wallpaperOptions.classList.toggle('hidden', m === 'gradient');
     els.middleColorRow.classList.toggle('hidden', !state.settings.middleEnabled);
-    els.middlePositionRow.classList.toggle('hidden', !state.settings.middleEnabled || !state.settings.bottomEnabled);
-    els.bottomColorRow.classList.toggle('hidden', !state.settings.bottomEnabled)
+    els.middlePositionRow.classList.toggle(
+      'hidden',
+      !state.settings.middleEnabled || !state.settings.bottomEnabled
+    );
+    els.bottomColorRow.classList.toggle('hidden', !state.settings.bottomEnabled);
   }
   // ---------------------------------------------------------------------------
   // Grid rendering
@@ -484,81 +519,85 @@
     const w = document.createElement('div');
     w.className = 'shortcut-icon';
     if (item.type === 'folder') {
-      const f = state.folders[item.folderId], items = (f?.items || []).slice(0, 20), p = document.createElement('div');
+      const f = state.folders[item.folderId],
+        items = (f?.items || []).slice(0, 20),
+        p = document.createElement('div');
       p.className = 'folder-preview';
       const count = Math.max(1, items.length);
-      let cols = 2, rows = 2;
+      let cols = 2,
+        rows = 2;
       if (count > 4 && count <= 9) {
         cols = 3;
-        rows = 3
+        rows = 3;
       } else if (count > 9 && count <= 12) {
         cols = 4;
-        rows = 3
+        rows = 3;
       } else if (count > 12) {
         cols = 5;
-        rows = 4
+        rows = 4;
       }
       p.style.setProperty('--folder-preview-cols', cols);
       p.style.setProperty('--folder-preview-rows', rows);
-      p.style.setProperty('--folder-preview-font-size', (cols === 2 ? 12: cols === 3 ? 9: cols === 4 ? 7: 6) + 'px');
+      p.style.setProperty(
+        '--folder-preview-font-size',
+        (cols === 2 ? 12 : cols === 3 ? 9 : cols === 4 ? 7 : 6) + 'px'
+      );
       for (const child of items) {
         if (child.icon?.kind === 'asset') {
-          const img = document.createElement('img'), v = await assetGet(child.icon.assetId);
+          const img = document.createElement('img'),
+            v = await assetGet(child.icon.assetId);
           img.src = v || favUrl(child.url, 128);
-          p.appendChild(img)
+          p.appendChild(img);
         } else if (child.icon?.kind === 'remote') {
           const img = document.createElement('img');
           img.src = child.icon.url;
           img.onerror = () => {
             img.onerror = null;
-            img.src = favUrl(child.url, 128)
+            img.src = favUrl(child.url, 128);
           };
-          p.appendChild(img)
+          p.appendChild(img);
         } else if (child.icon?.kind === 'generated') {
           const d = document.createElement('div');
           d.className = 'mini-fallback';
           d.style.background = child.icon.color || genColor(child.title || child.url);
           d.textContent = initials(child.title, child.url);
-          p.appendChild(d)
+          p.appendChild(d);
         } else {
           const img = document.createElement('img');
           img.src = favUrl(child.url, child.icon?.size || 128);
-          p.appendChild(img)
+          p.appendChild(img);
         }
       }
       w.appendChild(p);
-      return w
+      return w;
     }
     if (item.icon?.kind === 'asset') {
-      const img = document.createElement('img'), v = await assetGet(item.icon.assetId);
+      const img = document.createElement('img'),
+        v = await assetGet(item.icon.assetId);
       img.src = v || favUrl(item.url, 128);
-      w.appendChild(img)
+      w.appendChild(img);
     } else if (item.icon?.kind === 'remote') {
       const img = document.createElement('img');
       img.src = item.icon.url;
       img.onerror = () => {
         img.onerror = null;
-        img.src = favUrl(item.url, 128)
+        img.src = favUrl(item.url, 128);
       };
-      w.appendChild(img)
+      w.appendChild(img);
     } else if (item.icon?.kind === 'generated') {
       const d = document.createElement('div');
       d.className = 'generated-icon';
       d.style.background = item.icon.color || genColor(item.title || item.url);
       d.textContent = initials(item.title, item.url);
-      w.appendChild(d)
+      w.appendChild(d);
     } else {
       const img = document.createElement('img');
       img.src = favUrl(item.url, item.icon?.size || 128);
-      w.appendChild(img)
+      w.appendChild(img);
     }
-    return w
+    return w;
   }
-  async function makeShortcut(item, {
-    folderId = null
-  }
-  = {
-  }) {
+  async function makeShortcut(item, { folderId = null } = {}) {
     const el = document.createElement('div');
     el.className = 'shortcut';
     el.dataset.itemId = item.id;
@@ -576,7 +615,7 @@
       pen.title = 'Edit';
       pen.addEventListener('click', e => {
         e.stopPropagation();
-        item.type === 'folder' ? openGroupEdit(item.folderId): openEdit(item.id)
+        item.type === 'folder' ? openGroupEdit(item.folderId) : openEdit(item.id);
       });
       el.appendChild(pen);
       const del = document.createElement('button');
@@ -585,37 +624,38 @@
       del.textContent = '×';
       del.addEventListener('click', async e => {
         e.stopPropagation();
-        await deleteItem(item.id)
+        await deleteItem(item.id);
       });
-      el.appendChild(del)
+      el.appendChild(del);
     }
     el.addEventListener('click', () => {
       if (editing) {
-        if (item.type === 'folder')openFolder(item.folderId);
-        return
+        if (item.type === 'folder') openFolder(item.folderId);
+        return;
       }
-      if (item.type === 'folder')openFolder(item.folderId);
-      else location.href = navUrl(item.url)
+      if (item.type === 'folder') openFolder(item.folderId);
+      else location.href = navUrl(item.url);
     });
     el.addEventListener('contextmenu', async e => {
       e.preventDefault();
       e.stopPropagation();
       if (!editing) {
-        await enterEdit()
+        await enterEdit();
       }
-      if (folderId && els.folderDialog.open)await renderFolder(folderId)
+      if (folderId && els.folderDialog.open) await renderFolder(folderId);
     });
     el.addEventListener('dragstart', e => {
       if (!editing) {
         e.preventDefault();
-        return
+        return;
       }
       dragInfo = {
-        itemId: item.id, sourceFolderId: folderId
+        itemId: item.id,
+        sourceFolderId: folderId,
       };
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', item.id)
+      e.dataTransfer.setData('text/plain', item.id);
     });
     el.addEventListener('dragend', () => {
       el.classList.remove('dragging');
@@ -624,59 +664,71 @@
       edgeTimer = null;
       els.edgeLeftIndicator.classList.remove('active');
       els.edgeRightIndicator.classList.remove('active');
-      dragInfo = null
+      dragInfo = null;
     });
     el.addEventListener('dragover', e => {
-      if (!editing || !dragInfo || dragInfo.itemId === item.id)return;
+      if (!editing || !dragInfo || dragInfo.itemId === item.id) return;
       e.preventDefault();
       clearIndicators();
-      const r = el.getBoundingClientRect(), x = (e.clientX - r.left)/r.width;
-      if (x < .32)el.classList.add('insert-before');
-      else if (x > .68)el.classList.add('insert-after');
-      else el.classList.add('group-target')
+      const r = el.getBoundingClientRect(),
+        x = (e.clientX - r.left) / r.width;
+      if (x < 0.32) el.classList.add('insert-before');
+      else if (x > 0.68) el.classList.add('insert-after');
+      else el.classList.add('group-target');
     });
-    el.addEventListener('dragleave', () => el.classList.remove('insert-before', 'insert-after', 'group-target'));
+    el.addEventListener('dragleave', () =>
+      el.classList.remove('insert-before', 'insert-after', 'group-target')
+    );
     el.addEventListener('drop', async e => {
-      if (!editing || !dragInfo || dragInfo.itemId === item.id)return;
+      if (!editing || !dragInfo || dragInfo.itemId === item.id) return;
       e.preventDefault();
       e.stopPropagation();
-      const r = el.getBoundingClientRect(), x = (e.clientX - r.left)/r.width;
+      const r = el.getBoundingClientRect(),
+        x = (e.clientX - r.left) / r.width;
       clearIndicators();
-      if (x >= .32 && x <= .68)await groupDrop(dragInfo.itemId, item.id);
-      else await reorderDrop(dragInfo.itemId, item.id, x < .5 ? 'before': 'after', folderId)
+      if (x >= 0.32 && x <= 0.68) await groupDrop(dragInfo.itemId, item.id);
+      else await reorderDrop(dragInfo.itemId, item.id, x < 0.5 ? 'before' : 'after', folderId);
     });
-    if (folderId)el.addEventListener('drag', async e => {
-      if (!dragInfo || dragInfo.itemId !== item.id || e.clientX === 0 && e.clientY === 0)return;
-      const r = els.folderDialog.getBoundingClientRect();
-      if (e.clientX < r.left - 25 || e.clientX > r.right + 25 || e.clientY < r.top - 25 || e.clientY > r.bottom + 25) {
-        await moveOutOfFolder(item.id, folderId);
-        if (els.folderDialog.open)els.folderDialog.close()
-      }
-    });
-    return el
+    if (folderId)
+      el.addEventListener('drag', async e => {
+        if (!dragInfo || dragInfo.itemId !== item.id || (e.clientX === 0 && e.clientY === 0))
+          return;
+        const r = els.folderDialog.getBoundingClientRect();
+        if (
+          e.clientX < r.left - 25 ||
+          e.clientX > r.right + 25 ||
+          e.clientY < r.top - 25 ||
+          e.clientY > r.bottom + 25
+        ) {
+          await moveOutOfFolder(item.id, folderId);
+          if (els.folderDialog.open) els.folderDialog.close();
+        }
+      });
+    return el;
   }
   function clearIndicators() {
-    $$('.insert-before,.insert-after,.group-target,.empty-target').forEach(x => x.classList.remove('insert-before', 'insert-after', 'group-target', 'empty-target'))
+    $$('.insert-before,.insert-after,.group-target,.empty-target').forEach(x =>
+      x.classList.remove('insert-before', 'insert-after', 'group-target', 'empty-target')
+    );
   }
   async function render() {
     const seq = ++renderSeq;
-    const p = page(), capacity = cap();
+    const p = page(),
+      capacity = cap();
     if (p.items.length > capacity) {
       const overflow = p.items.splice(capacity);
-      for (const it of overflow)state.pages[freePage(state.currentPage + 1)].items.push(it);
+      for (const it of overflow) state.pages[freePage(state.currentPage + 1)].items.push(it);
       pruneEmptyPages();
-      await save()
+      await save();
     }
     const frag = document.createDocumentFragment();
     const current = page();
-    for (let i = 0;
-    i < capacity;
-    i++) {
+    for (let i = 0; i < capacity; i++) {
       const cell = document.createElement('div');
       cell.className = 'grid-cell';
       cell.dataset.index = i;
       const item = current.items[i];
-      if (item)cell.appendChild(await makeShortcut(item));
+      if (item) cell.appendChild(await makeShortcut(item));
       else {
         const plus = document.createElement('button');
         plus.type = 'button';
@@ -686,42 +738,42 @@
         plus.addEventListener('contextmenu', async e => {
           e.preventDefault();
           e.stopPropagation();
-          if (!editing)await enterEdit()
+          if (!editing) await enterEdit();
         });
         plus.addEventListener('dragover', e => {
           if (editing && dragInfo) {
             e.preventDefault();
             clearIndicators();
-            plus.classList.add('empty-target')
+            plus.classList.add('empty-target');
           }
         });
         plus.addEventListener('dragleave', () => plus.classList.remove('empty-target'));
         plus.addEventListener('drop', async e => {
-          if (!editing || !dragInfo)return;
+          if (!editing || !dragInfo) return;
           e.preventDefault();
           clearIndicators();
-          await moveToSlot(dragInfo.itemId, state.currentPage, i)
+          await moveToSlot(dragInfo.itemId, state.currentPage, i);
         });
-        cell.appendChild(plus)
+        cell.appendChild(plus);
       }
-      frag.appendChild(cell)
+      frag.appendChild(cell);
     }
-    if (seq !== renderSeq)return;
+    if (seq !== renderSeq) return;
     els.grid.replaceChildren(frag);
     els.grid.classList.toggle('page-empty', current.items.length === 0);
     renderDots();
     updatePagerVisibility();
-    updateEditPageButton()
+    updateEditPageButton();
   }
   function renderDots() {
     els.pageDots.replaceChildren();
     state.pages.forEach((_, i) => {
       const b = document.createElement('button');
-      b.className = 'page-dot' + (i === state.currentPage ? ' active': '');
+      b.className = 'page-dot' + (i === state.currentPage ? ' active' : '');
       b.type = 'button';
       b.addEventListener('click', () => go(i));
-      els.pageDots.appendChild(b)
-    })
+      els.pageDots.appendChild(b);
+    });
   }
   // ---------------------------------------------------------------------------
   // Page navigation and edit mode
@@ -729,27 +781,33 @@
 
   async function go(i) {
     i = Math.max(0, Math.min(i, state.pages.length - 1));
-    if (i === state.currentPage || pageAnimating)return;
-    const from = state.currentPage, dir = i > from ? 1: - 1;
-    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (i === state.currentPage || pageAnimating) return;
+    const from = state.currentPage,
+      dir = i > from ? 1 : -1;
+    const reduce =
+      window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     pageAnimating = true;
-    let oldGrid = null, incoming = null, outgoing = null;
+    let oldGrid = null,
+      incoming = null,
+      outgoing = null;
     try {
       if (reduce) {
         state.currentPage = i;
         await save();
         await render();
-        return
+        return;
       }
-      const r = els.grid.getBoundingClientRect(), ow = els.grid.offsetWidth, oh = els.grid.offsetHeight;
+      const r = els.grid.getBoundingClientRect(),
+        ow = els.grid.offsetWidth,
+        oh = els.grid.offsetHeight;
       oldGrid = els.grid.cloneNode(true);
       oldGrid.removeAttribute('id');
       oldGrid.classList.add('grid-slide-ghost');
       oldGrid.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
-      oldGrid.querySelectorAll('button').forEach(b => b.tabIndex = - 1);
+      oldGrid.querySelectorAll('button').forEach(b => (b.tabIndex = -1));
       oldGrid.style.position = 'fixed';
-      oldGrid.style.left = `${r.left+r.width/2-ow/2}px`;
-      oldGrid.style.top = `${r.top+r.height/2-oh/2}px`;
+      oldGrid.style.left = `${r.left + r.width / 2 - ow / 2}px`;
+      oldGrid.style.top = `${r.top + r.height / 2 - oh / 2}px`;
       oldGrid.style.width = `${ow}px`;
       oldGrid.style.height = `${oh}px`;
       oldGrid.style.margin = '0';
@@ -757,8 +815,8 @@
       oldGrid.style.zIndex = '7';
       oldGrid.style.opacity = '1';
       oldGrid.style.visibility = 'visible';
-      const iconOpacity = String(state.settings.iconOpacity/100);
-      oldGrid.querySelectorAll('.shortcut-icon').forEach(n => n.style.opacity = iconOpacity);
+      const iconOpacity = String(state.settings.iconOpacity / 100);
+      oldGrid.querySelectorAll('.shortcut-icon').forEach(n => (n.style.opacity = iconOpacity));
       document.body.appendChild(oldGrid);
       // Prevent a one-frame double exposure of the old page while the async render
       // builds the incoming page. That overlap made translucent icons appear solid
@@ -768,63 +826,73 @@
       await save();
       await render();
       const distance = Math.max(window.innerWidth * 1.02, r.width * 1.12);
-      els.grid.querySelectorAll('.shortcut-icon').forEach(n => n.style.opacity = iconOpacity);
+      els.grid.querySelectorAll('.shortcut-icon').forEach(n => (n.style.opacity = iconOpacity));
       els.grid.classList.add('page-transitioning');
       els.grid.style.willChange = 'translate';
       oldGrid.style.willChange = 'translate';
-      els.grid.style.translate = `${dir*distance}px 0`;
+      els.grid.style.translate = `${dir * distance}px 0`;
       els.grid.style.visibility = 'visible';
       // Flush the starting position before animation so Chrome cannot paint the
       // incoming page for a frame at its final position.
       void els.grid.offsetWidth;
       const duration = 260;
       const easing = 'cubic-bezier(.22,.74,.24,1)';
-      incoming = els.grid.animate([ {
-        translate: `${dir*distance}px 0`
-      }, {
-        translate: '0 0'
-      }], {
-        duration, easing, fill: 'both'
-      });
-      outgoing = oldGrid.animate([ {
-        translate: '0 0'
-      }, {
-        translate: `${-dir*distance}px 0`
-      }], {
-        duration, easing, fill: 'both'
-      });
+      incoming = els.grid.animate(
+        [
+          {
+            translate: `${dir * distance}px 0`,
+          },
+          {
+            translate: '0 0',
+          },
+        ],
+        {
+          duration,
+          easing,
+          fill: 'both',
+        }
+      );
+      outgoing = oldGrid.animate(
+        [
+          {
+            translate: '0 0',
+          },
+          {
+            translate: `${-dir * distance}px 0`,
+          },
+        ],
+        {
+          duration,
+          easing,
+          fill: 'both',
+        }
+      );
       try {
-        await Promise.all([incoming.finished, outgoing.finished])
-      } catch (_e) {
-      }
+        await Promise.all([incoming.finished, outgoing.finished]);
+      } catch (_e) {}
     } catch (err) {
       console.error('GridLand page transition failed:', err);
       state.currentPage = i;
       try {
-        await save()
-      } catch (_e) {
-      }
+        await save();
+      } catch (_e) {}
       try {
-        await render()
-      } catch (_e) {
-      }
+        await render();
+      } catch (_e) {}
     } finally {
       try {
-        incoming?.cancel()
-      } catch (_e) {
-      }
+        incoming?.cancel();
+      } catch (_e) {}
       try {
-        outgoing?.cancel()
-      } catch (_e) {
-      }
+        outgoing?.cancel();
+      } catch (_e) {}
       els.grid.style.translate = '';
       els.grid.style.visibility = '';
       els.grid.style.willChange = '';
       els.grid.classList.remove('page-transitioning');
       try {
-        oldGrid?.remove()
-      } catch (_e) {
-      }
+        oldGrid?.remove();
+      } catch (_e) {}
       pageAnimating = false;
     }
   }
@@ -834,7 +902,7 @@
     els.editBanner.classList.remove('hidden');
     placeEditBanner();
     await render();
-    if (folderContextId && els.folderDialog.open)await renderFolder(folderContextId)
+    if (folderContextId && els.folderDialog.open) await renderFolder(folderContextId);
   }
   async function exitEdit() {
     editing = false;
@@ -842,13 +910,13 @@
     els.editBanner.classList.add('hidden');
     placeEditBanner();
     await render();
-    if (folderContextId && els.folderDialog.open)await renderFolder(folderContextId)
+    if (folderContextId && els.folderDialog.open) await renderFolder(folderContextId);
   }
   function updateEditPageButton() {
-    if (!els.deletePageEdit)return;
+    if (!els.deletePageEdit) return;
     const only = state.pages.length === 1;
     els.deletePageEdit.disabled = only;
-    els.deletePageEdit.title = only ? 'The only page cannot be deleted': 'Delete this page'
+    els.deletePageEdit.title = only ? 'The only page cannot be deleted' : 'Delete this page';
   }
   // ---------------------------------------------------------------------------
   // Drag, drop, grouping, and deletion
@@ -856,72 +924,79 @@
 
   async function moveToSlot(id, pidx, idx) {
     const m = take(id);
-    if (!m)return;
+    if (!m) return;
     const target = state.pages[pidx];
     idx = Math.max(0, Math.min(idx, target.items.length));
     target.items.splice(idx, 0, m);
     pruneEmptyPages();
     await save();
     await render();
-    if (folderContextId && els.folderDialog.open)await renderFolder(folderContextId)
+    if (folderContextId && els.folderDialog.open) await renderFolder(folderContextId);
   }
   async function reorderDrop(src, targetId, where, folderId) {
     const srcItem = take(src);
-    if (!srcItem)return;
+    if (!srcItem) return;
     let t = locate(targetId);
     if (!t) {
-      return
+      return;
     }
     if (folderId && t.folderId !== folderId) {
-      return
+      return;
     }
-    let idx = t.index + (where === 'after' ? 1: 0);
+    let idx = t.index + (where === 'after' ? 1 : 0);
     t.container.splice(idx, 0, srcItem);
     pruneEmptyPages();
     await save();
     await render();
-    if (folderId && els.folderDialog.open)await renderFolder(folderId)
+    if (folderId && els.folderDialog.open) await renderFolder(folderId);
   }
   async function groupDrop(src, targetId) {
-    let s = locate(src), t = locate(targetId);
-    if (!s || !t)return;
+    let s = locate(src),
+      t = locate(targetId);
+    if (!s || !t) return;
     if (t.item.type === 'folder') {
       const f = state.folders[t.item.folderId];
       if (f.items.length >= 20) {
         toast('Groups are limited to 20 icons.');
-        return
+        return;
       }
       const m = take(src);
       f.items.push(m);
       pruneEmptyPages();
       await save();
       await render();
-      return
+      return;
     }
     if (s.folderId && t.folderId === s.folderId) {
       await reorderDrop(src, targetId, 'after', s.folderId);
-      return
+      return;
     }
     const moved = take(src);
     t = locate(targetId);
-    if (!t || !moved)return;
+    if (!t || !moved) return;
     const target = t.container.splice(t.index, 1)[0];
-    const id = crypto.randomUUID(), name = `Group ${state.groupCounter++}`;
+    const id = crypto.randomUUID(),
+      name = `Group ${state.groupCounter++}`;
     state.folders[id] = {
-      id, title: name, items: [target, moved]
+      id,
+      title: name,
+      items: [target, moved],
     };
     t.container.splice(t.index, 0, {
-      id: crypto.randomUUID(), type: 'folder', folderId: id, title: name
+      id: crypto.randomUUID(),
+      type: 'folder',
+      folderId: id,
+      title: name,
     });
     pruneEmptyPages();
     await save();
-    await render()
+    await render();
   }
   async function moveOutOfFolder(id, folderId) {
     const f = state.folders[folderId];
-    if (!f)return;
+    if (!f) return;
     const i = f.items.findIndex(x => x.id === id);
-    if (i < 0)return;
+    if (i < 0) return;
     const m = f.items.splice(i, 1)[0];
     const pi = freePage(state.currentPage);
     state.pages[pi].items.push(m);
@@ -929,34 +1004,39 @@
     if (emptied) {
       deleteFolderShell(folderId);
       folderContextId = null;
-      if (els.folderDialog.open)els.folderDialog.close()
+      if (els.folderDialog.open) els.folderDialog.close();
     }
     pruneEmptyPages();
     await save();
     await render();
-    if (!emptied && els.folderDialog.open)await renderFolder(folderId)
+    if (!emptied && els.folderDialog.open) await renderFolder(folderId);
   }
   function deleteFolderShell(fid) {
     delete state.folders[fid];
     for (const p of state.pages) {
       const i = p.items.findIndex(x => x.type === 'folder' && x.folderId === fid);
-      if (i >= 0)p.items.splice(i, 1)
+      if (i >= 0) p.items.splice(i, 1);
     }
   }
   async function deleteItem(id) {
     const f = locate(id);
-    if (!f)return;
+    if (!f) return;
     if (f.item.type === 'folder') {
       const fol = state.folders[f.item.folderId];
-      if (fol?.items.length && !confirm(`Delete ${f.item.title} and its ${fol.items.length} icons?`))return;
-      for (const c of fol?.items || [])if (c.icon?.kind === 'asset')await assetDel(c.icon.assetId);
-      delete state.folders[f.item.folderId]
-    } else if (f.item.icon?.kind === 'asset')await assetDel(f.item.icon.assetId);
+      if (
+        fol?.items.length &&
+        !confirm(`Delete ${f.item.title} and its ${fol.items.length} icons?`)
+      )
+        return;
+      for (const c of fol?.items || [])
+        if (c.icon?.kind === 'asset') await assetDel(c.icon.assetId);
+      delete state.folders[f.item.folderId];
+    } else if (f.item.icon?.kind === 'asset') await assetDel(f.item.icon.assetId);
     take(id);
     pruneEmptyPages();
     await save();
     await render();
-    if (folderContextId && els.folderDialog.open)await renderFolder(folderContextId)
+    if (folderContextId && els.folderDialog.open) await renderFolder(folderContextId);
   }
   // ---------------------------------------------------------------------------
   // Settings panel
@@ -964,26 +1044,40 @@
 
   function openSettings() {
     els.settingsPanel.classList.add('open');
-    els.panelScrim.classList.remove('hidden')
+    els.panelScrim.classList.remove('hidden');
   }
   function closeSettings() {
     els.settingsPanel.classList.remove('open');
-    els.panelScrim.classList.add('hidden')
+    els.panelScrim.classList.add('hidden');
   }
   function fill(sel, a, b) {
     sel.innerHTML = '';
-    for (let i = a;
-    i <= b;
-    i++) {
+    for (let i = a; i <= b; i++) {
       const o = document.createElement('option');
       o.value = i;
       o.textContent = i;
-      sel.appendChild(o)
+      sel.appendChild(o);
     }
   }
   function sync() {
     const s = state.settings;
-    for (const[el, v]of[[els.columnsSelect, s.cols], [els.rowsSelect, s.rows], [els.screenScale, s.screenScale], [els.iconSize, s.iconSize], [els.iconRadius, s.iconRadius], [els.iconOpacity, s.iconOpacity], [els.labelSize, s.labelSize], [els.backgroundMode, s.backgroundMode], [els.topColor, s.topColor], [els.middleColor, s.middleColor], [els.middlePosition, s.middlePosition], [els.bottomColor, s.bottomColor], [els.wallpaperDim, s.wallpaperDim], [els.wallpaperBlur, s.wallpaperBlur]])el.value = v;
+    for (const [el, v] of [
+      [els.columnsSelect, s.cols],
+      [els.rowsSelect, s.rows],
+      [els.screenScale, s.screenScale],
+      [els.iconSize, s.iconSize],
+      [els.iconRadius, s.iconRadius],
+      [els.iconOpacity, s.iconOpacity],
+      [els.labelSize, s.labelSize],
+      [els.backgroundMode, s.backgroundMode],
+      [els.topColor, s.topColor],
+      [els.middleColor, s.middleColor],
+      [els.middlePosition, s.middlePosition],
+      [els.bottomColor, s.bottomColor],
+      [els.wallpaperDim, s.wallpaperDim],
+      [els.wallpaperBlur, s.wallpaperBlur],
+    ])
+      el.value = v;
     els.showDots.checked = s.showDots;
     els.showArrows.checked = s.showArrows;
     els.iconShadow.checked = s.iconShadow;
@@ -998,34 +1092,34 @@
     els.middlePositionOut.textContent = s.middlePosition + '%';
     els.wallpaperDimOut.textContent = s.wallpaperDim + '%';
     els.wallpaperBlurOut.textContent = s.wallpaperBlur + 'px';
-    updateBackgroundUi()
+    updateBackgroundUi();
   }
   async function settingsChange() {
     const s = state.settings;
-    s.cols = + els.columnsSelect.value;
-    s.rows = + els.rowsSelect.value;
-    s.screenScale = + els.screenScale.value;
+    s.cols = +els.columnsSelect.value;
+    s.rows = +els.rowsSelect.value;
+    s.screenScale = +els.screenScale.value;
     s.showDots = els.showDots.checked;
     s.showArrows = els.showArrows.checked;
-    s.iconSize = + els.iconSize.value;
-    s.iconRadius = + els.iconRadius.value;
-    s.iconOpacity = + els.iconOpacity.value;
-    s.labelSize = + els.labelSize.value;
+    s.iconSize = +els.iconSize.value;
+    s.iconRadius = +els.iconRadius.value;
+    s.iconOpacity = +els.iconOpacity.value;
+    s.labelSize = +els.labelSize.value;
     s.iconShadow = els.iconShadow.checked;
     s.showLabels = els.showLabels.checked;
     s.backgroundMode = els.backgroundMode.value;
     s.topColor = els.topColor.value;
     s.middleEnabled = els.middleEnabled.checked;
     s.middleColor = els.middleColor.value;
-    s.middlePosition = + els.middlePosition.value;
+    s.middlePosition = +els.middlePosition.value;
     s.bottomEnabled = els.bottomEnabled.checked;
     s.bottomColor = els.bottomColor.value;
-    s.wallpaperDim = + els.wallpaperDim.value;
-    s.wallpaperBlur = + els.wallpaperBlur.value;
+    s.wallpaperDim = +els.wallpaperDim.value;
+    s.wallpaperBlur = +els.wallpaperBlur.value;
     await save();
     sync();
     await appearance();
-    await render()
+    await render();
   }
   // ---------------------------------------------------------------------------
   // Site editor and icon discovery
@@ -1037,19 +1131,22 @@
     els.siteDialogTitle.textContent = 'Add site';
     els.siteUrl.value = '';
     els.siteTitle.value = '';
-    els.siteDialog.dataset.slot = slot === null ? '': slot;
+    els.siteDialog.dataset.slot = slot === null ? '' : slot;
     els.deleteSiteButton.classList.add('hidden');
     els.iconLookupStatus.textContent = '';
     renderChoices();
-    els.siteDialog.showModal()
+    els.siteDialog.showModal();
   }
   async function openEdit(id) {
     const f = locate(id);
-    if (!f || f.item.type === 'folder')return;
+    if (!f || f.item.type === 'folder') return;
     editingItem = f.item;
-    selectedIcon = clone(f.item.icon || {
-      kind: 'favicon', size: 128
-    });
+    selectedIcon = clone(
+      f.item.icon || {
+        kind: 'favicon',
+        size: 128,
+      }
+    );
     els.siteDialogTitle.textContent = 'Edit icon';
     els.siteUrl.value = f.item.url || '';
     els.siteTitle.value = f.item.title || '';
@@ -1059,134 +1156,180 @@
     let current = [];
     if (selectedIcon.kind === 'asset') {
       const data = await assetGet(selectedIcon.assetId);
-      if (data)current = [ {
-        ...selectedIcon, label: 'Current icon'
-      }];
+      if (data)
+        current = [
+          {
+            ...selectedIcon,
+            label: 'Current icon',
+          },
+        ];
     } else if (selectedIcon.kind === 'remote') {
       // Existing web-hosted icons are localized when editing so the displayed icon can
       // immediately be cropped/modified without losing its current source.
       els.iconLookupStatus.textContent = 'Preparing the current icon for editing…';
       const data = await remoteIconToDataUrl(selectedIcon.url, {
-        quiet: true
+        quiet: true,
       });
       if (data) {
         selectedIcon = {
-          kind: 'asset-temp', dataUrl: data, label: 'Current icon'
+          kind: 'asset-temp',
+          dataUrl: data,
+          label: 'Current icon',
         };
         current = [clone(selectedIcon)];
-        els.iconLookupStatus.textContent = 'Current icon loaded for editing.'
+        els.iconLookupStatus.textContent = 'Current icon loaded for editing.';
       } else {
-        current = [ {
-          ...selectedIcon, label: 'Current icon'
-        }];
-        els.iconLookupStatus.textContent = 'This icon is web-hosted. It can still be kept as-is; Chrome may ask for site access if you crop it.'
+        current = [
+          {
+            ...selectedIcon,
+            label: 'Current icon',
+          },
+        ];
+        els.iconLookupStatus.textContent =
+          'This icon is web-hosted. It can still be kept as-is; Chrome may ask for site access if you crop it.';
       }
     } else if (selectedIcon.kind === 'generated') {
-      current = [ {
-        ...selectedIcon, label: 'Current icon'
-      }];
+      current = [
+        {
+          ...selectedIcon,
+          label: 'Current icon',
+        },
+      ];
     } else if (selectedIcon.kind === 'favicon') {
-      current = [ {
-        ...selectedIcon, label: 'Current icon'
-      }];
+      current = [
+        {
+          ...selectedIcon,
+          label: 'Current icon',
+        },
+      ];
     }
     await renderChoices(current);
-    els.siteDialog.showModal()
+    els.siteDialog.showModal();
   }
   function canCropIcon(icon) {
-    return!!icon && ['asset-temp', 'asset', 'favicon', 'remote'].includes(icon.kind)
+    return !!icon && ['asset-temp', 'asset', 'favicon', 'remote'].includes(icon.kind);
   }
   async function renderChoices(extra = []) {
     els.iconChoices.innerHTML = '';
-    const base = [ {
-      kind: 'generated', color: genColor(els.siteTitle.value || els.siteUrl.value), label: 'Generated'
-    }, {
-      kind: 'favicon', size: 128, label: 'Chrome favicon'
-    }];
+    const base = [
+      {
+        kind: 'generated',
+        color: genColor(els.siteTitle.value || els.siteUrl.value),
+        label: 'Generated',
+      },
+      {
+        kind: 'favicon',
+        size: 128,
+        label: 'Chrome favicon',
+      },
+    ];
     const all = [...extra, ...base];
     for (const c of all) {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'icon-choice';
       const data = clone(c);
-      const matches = selectedIcon && ((selectedIcon.kind === data.kind && selectedIcon.size === data.size && selectedIcon.url === data.url && selectedIcon.color === data.color && selectedIcon.assetId === data.assetId) || (selectedIcon.kind === 'asset-temp' && data.kind === 'asset-temp' && selectedIcon.dataUrl === data.dataUrl));
-      if (matches)b.classList.add('selected');
+      const matches =
+        selectedIcon &&
+        ((selectedIcon.kind === data.kind &&
+          selectedIcon.size === data.size &&
+          selectedIcon.url === data.url &&
+          selectedIcon.color === data.color &&
+          selectedIcon.assetId === data.assetId) ||
+          (selectedIcon.kind === 'asset-temp' &&
+            data.kind === 'asset-temp' &&
+            selectedIcon.dataUrl === data.dataUrl));
+      if (matches) b.classList.add('selected');
       if (c.kind === 'generated') {
         const d = document.createElement('div');
         d.className = 'generated-icon';
         d.style.background = c.color;
         d.textContent = initials(els.siteTitle.value, els.siteUrl.value);
-        b.appendChild(d)
+        b.appendChild(d);
       } else {
         const img = document.createElement('img');
         img.alt = '';
-        img.src = c.kind === 'asset-temp' ? c.dataUrl: c.kind === 'remote' ? c.url: c.kind === 'asset' ? (await assetGet(c.assetId) || favUrl(els.siteUrl.value, 128)): favUrl(els.siteUrl.value, c.size || 128);
-        if (c.kind === 'remote')img.addEventListener('error', () => {
-          if (c.label === 'Current icon') {
-            img.onerror = null;
-            img.src = favUrl(els.siteUrl.value, 128)
-          } else b.remove()
-        }, {
-          once: true
-        });
-        b.appendChild(img)
+        img.src =
+          c.kind === 'asset-temp'
+            ? c.dataUrl
+            : c.kind === 'remote'
+              ? c.url
+              : c.kind === 'asset'
+                ? (await assetGet(c.assetId)) || favUrl(els.siteUrl.value, 128)
+                : favUrl(els.siteUrl.value, c.size || 128);
+        if (c.kind === 'remote')
+          img.addEventListener(
+            'error',
+            () => {
+              if (c.label === 'Current icon') {
+                img.onerror = null;
+                img.src = favUrl(els.siteUrl.value, 128);
+              } else b.remove();
+            },
+            {
+              once: true,
+            }
+          );
+        b.appendChild(img);
       }
       b.title = c.label || 'Icon';
       b.addEventListener('click', () => {
         $$('.icon-choice').forEach(x => x.classList.remove('selected'));
         b.classList.add('selected');
         selectedIcon = data;
-        els.cropSelectedButton.disabled = !canCropIcon(data)
+        els.cropSelectedButton.disabled = !canCropIcon(data);
       });
-      els.iconChoices.appendChild(b)
+      els.iconChoices.appendChild(b);
     }
-    els.cropSelectedButton.disabled = !canCropIcon(selectedIcon)
+    els.cropSelectedButton.disabled = !canCropIcon(selectedIcon);
   }
-  async function safeIconFetch(url, options = {
-  }) {
+  async function safeIconFetch(url, options = {}) {
     try {
       const r = await fetch(url, {
-        credentials: 'omit', redirect: 'manual', ...options
+        credentials: 'omit',
+        redirect: 'manual',
+        ...options,
       });
-      if (r.type === 'opaqueredirect' || (r.status >= 300 && r.status < 400))return null;
-      return r
+      if (r.type === 'opaqueredirect' || (r.status >= 300 && r.status < 400)) return null;
+      return r;
     } catch {
-      return null
+      return null;
     }
   }
   async function findIcons() {
     const raw = els.siteUrl.value.trim();
     if (!raw) {
       toast('Enter a URL first.');
-      return
+      return;
     }
     const origin = siteOrigin(raw);
     if (!origin) {
       toast('Could not interpret that address.');
-      return
+      return;
     }
     els.iconLookupStatus.textContent = 'Requesting access to this site…';
     let ok = false;
     try {
-      ok = await chrome.permissions.request( {
-        origins: [origin]
-      })
-    } catch {
-    }
+      ok = await chrome.permissions.request({
+        origins: [origin],
+      });
+    } catch {}
     if (!ok) {
-      els.iconLookupStatus.textContent = 'Site access was not granted. Chrome favicon is still available.';
-      return
+      els.iconLookupStatus.textContent =
+        'Site access was not granted. Chrome favicon is still available.';
+      return;
     }
     els.iconLookupStatus.textContent = 'Looking for high-resolution site images…';
-    const pageUrl = navUrl(raw), urls = [];
+    const pageUrl = navUrl(raw),
+      urls = [];
     const add = (href, label) => {
-      if (!href)return;
+      if (!href) return;
       try {
-        urls.push( {
-          url: new URL(href, pageUrl).href, label
-        })
-      } catch {
-      }
+        urls.push({
+          url: new URL(href, pageUrl).href,
+          label,
+        });
+      } catch {}
     };
     let inspectedPage = false;
     const resp = await safeIconFetch(pageUrl);
@@ -1196,23 +1339,31 @@
         inspectedPage = true;
         const html = await resp.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        for (const n of doc.querySelectorAll('link[rel~="apple-touch-icon"],link[rel~="apple-touch-icon-precomposed"],link[rel~="icon"],link[rel~="shortcut"]'))add(n.getAttribute('href'), n.getAttribute('sizes') ? `Site icon ${n.getAttribute('sizes')}`: 'Site icon');
-        for (const n of doc.querySelectorAll('meta[property="og:image"],meta[property="og:logo"],meta[name="twitter:image"],meta[itemprop="image"],meta[itemprop="logo"]'))add(n.getAttribute('content'), 'Page image');
+        for (const n of doc.querySelectorAll(
+          'link[rel~="apple-touch-icon"],link[rel~="apple-touch-icon-precomposed"],link[rel~="icon"],link[rel~="shortcut"]'
+        ))
+          add(
+            n.getAttribute('href'),
+            n.getAttribute('sizes') ? `Site icon ${n.getAttribute('sizes')}` : 'Site icon'
+          );
+        for (const n of doc.querySelectorAll(
+          'meta[property="og:image"],meta[property="og:logo"],meta[name="twitter:image"],meta[itemprop="image"],meta[itemprop="logo"]'
+        ))
+          add(n.getAttribute('content'), 'Page image');
         for (const n of doc.querySelectorAll('script[type="application/ld+json"]')) {
           try {
             const data = JSON.parse(n.textContent);
             const walk = x => {
-              if (!x)return;
-              if (Array.isArray(x))return x.forEach(walk);
+              if (!x) return;
+              if (Array.isArray(x)) return x.forEach(walk);
               if (typeof x === 'object') {
-                if (typeof x.logo === 'string')add(x.logo, 'Structured logo');
-                if (typeof x.image === 'string')add(x.image, 'Structured image');
-                Object.values(x).forEach(walk)
+                if (typeof x.logo === 'string') add(x.logo, 'Structured logo');
+                if (typeof x.image === 'string') add(x.image, 'Structured image');
+                Object.values(x).forEach(walk);
               }
             };
-            walk(data)
-          } catch {
-          }
+            walk(data);
+          } catch {}
         }
         const manifestLink = doc.querySelector('link[rel="manifest"]')?.getAttribute('href');
         if (manifestLink) {
@@ -1222,113 +1373,142 @@
               const mr = await safeIconFetch(mu.href);
               if (mr && mr.ok) {
                 const man = await mr.json();
-                for (const ic of man.icons || [])add(ic.src, ic.sizes ? `App icon ${ic.sizes}`: 'App icon')
+                for (const ic of man.icons || [])
+                  add(ic.src, ic.sizes ? `App icon ${ic.sizes}` : 'App icon');
               }
             }
-          } catch {
-          }
+          } catch {}
         }
       }
     }
-    for (const path of['/apple-touch-icon.png', '/apple-touch-icon-precomposed.png', '/android-chrome-512x512.png', '/android-chrome-192x192.png', '/favicon-196x196.png', '/mstile-310x310.png', '/logo.png', '/favicon.ico'])add(path, 'Common icon path');
-    const seen = new Set(), found = urls.filter(x => !seen.has(x.url) && seen.add(x.url)).slice(0, 30).map(x => ( {
-      kind: 'remote', url: x.url, label: x.label
-    }));
-    if (found.length)els.iconLookupStatus.textContent = `Found up to ${found.length} candidate site images. Unavailable images disappear automatically without being fetched by GridLand.`;
-    else if (!inspectedPage)els.iconLookupStatus.textContent = 'This site redirected or blocked background inspection (common for signed-in apps). Try Search web, Chrome favicon, or upload an image.';
-    else els.iconLookupStatus.textContent = 'No larger site images were declared. Try Search web or upload an image.';
-    await renderChoices(found)
+    for (const path of [
+      '/apple-touch-icon.png',
+      '/apple-touch-icon-precomposed.png',
+      '/android-chrome-512x512.png',
+      '/android-chrome-192x192.png',
+      '/favicon-196x196.png',
+      '/mstile-310x310.png',
+      '/logo.png',
+      '/favicon.ico',
+    ])
+      add(path, 'Common icon path');
+    const seen = new Set(),
+      found = urls
+        .filter(x => !seen.has(x.url) && seen.add(x.url))
+        .slice(0, 30)
+        .map(x => ({
+          kind: 'remote',
+          url: x.url,
+          label: x.label,
+        }));
+    if (found.length)
+      els.iconLookupStatus.textContent = `Found up to ${found.length} candidate site images. Unavailable images disappear automatically without being fetched by GridLand.`;
+    else if (!inspectedPage)
+      els.iconLookupStatus.textContent =
+        'This site redirected or blocked background inspection (common for signed-in apps). Try Search web, Chrome favicon, or upload an image.';
+    else
+      els.iconLookupStatus.textContent =
+        'No larger site images were declared. Try Search web or upload an image.';
+    await renderChoices(found);
   }
-  async function remoteIconToDataUrl(url, {
-    quiet = false
-  }
-  = {
-  }) {
+  async function remoteIconToDataUrl(url, { quiet = false } = {}) {
     let origin;
     try {
-      origin = new URL(url).origin + '/*'
+      origin = new URL(url).origin + '/*';
     } catch {
-      return null
+      return null;
     }
     let allowed = false;
     try {
-      allowed = await chrome.permissions.request( {
-        origins: [origin]
-      })
+      allowed = await chrome.permissions.request({
+        origins: [origin],
+      });
     } catch {
       try {
-        allowed = await chrome.permissions.contains( {
-          origins: [origin]
-        })
-      } catch {
-      }
+        allowed = await chrome.permissions.contains({
+          origins: [origin],
+        });
+      } catch {}
     }
     if (!allowed) {
-      if (!quiet)els.iconLookupStatus.textContent = 'Chrome needs site access to crop this web-hosted image. You can keep the icon as-is or upload a local copy.';
-      return null
+      if (!quiet)
+        els.iconLookupStatus.textContent =
+          'Chrome needs site access to crop this web-hosted image. You can keep the icon as-is or upload a local copy.';
+      return null;
     }
     const r = await safeIconFetch(url);
-    if (!r || !r.ok)return null;
+    if (!r || !r.ok) return null;
     try {
       const blob = await r.blob();
-      if (!blob.type.startsWith('image/') || blob.size > 6_000_000)return null;
+      if (!blob.type.startsWith('image/') || blob.size > 6_000_000) return null;
       return await new Promise((res, rej) => {
         const fr = new FileReader();
         fr.onload = () => res(fr.result);
         fr.onerror = rej;
-        fr.readAsDataURL(blob)
-      })
+        fr.readAsDataURL(blob);
+      });
     } catch {
-      return null
+      return null;
     }
   }
   async function submitSite(e) {
     e.preventDefault();
-    const url = els.siteUrl.value.trim(), title = els.siteTitle.value.trim();
+    const url = els.siteUrl.value.trim(),
+      title = els.siteTitle.value.trim();
     if (!url || !title) {
       toast('Enter a URL and title.');
-      return
+      return;
     }
-    const editedLocation = editingItem ? locate(editingItem.id): null, editedFolderId = editedLocation?.folderId || null;
+    const editedLocation = editingItem ? locate(editingItem.id) : null,
+      editedFolderId = editedLocation?.folderId || null;
     let icon = selectedIcon || {
-      kind: 'favicon', size: 128
+      kind: 'favicon',
+      size: 128,
     };
     if (icon.kind === 'asset-temp') {
       const id = 'icon-' + crypto.randomUUID();
       await assetPut(id, icon.dataUrl);
       icon = {
-        kind: 'asset', assetId: id
-      }
+        kind: 'asset',
+        assetId: id,
+      };
     }
     if (editingItem) {
       editingItem.url = url;
       editingItem.title = title;
-      editingItem.icon = icon
+      editingItem.icon = icon;
     } else {
       const item = {
-        id: crypto.randomUUID(), type: 'site', url, title, icon
+        id: crypto.randomUUID(),
+        type: 'site',
+        url,
+        title,
+        icon,
       };
-      const slot = els.siteDialog.dataset.slot === '' ? null: + els.siteDialog.dataset.slot;
-      if (slot !== null && slot <= page().items.length)page().items.splice(slot, 0, item);
-      else state.pages[freePage(state.currentPage)].items.push(item)
+      const slot = els.siteDialog.dataset.slot === '' ? null : +els.siteDialog.dataset.slot;
+      if (slot !== null && slot <= page().items.length) page().items.splice(slot, 0, item);
+      else state.pages[freePage(state.currentPage)].items.push(item);
     }
     await save();
     els.siteDialog.close();
     await render();
-    if (editedFolderId && els.folderDialog.open && folderContextId === editedFolderId)await renderFolder(editedFolderId)
+    if (editedFolderId && els.folderDialog.open && folderContextId === editedFolderId)
+      await renderFolder(editedFolderId);
   }
   async function uploadIcon(f) {
-    if (!f)return;
+    if (!f) return;
     if (f.size > 6_000_000) {
       toast('Icon image must be under 6 MB.');
-      return
+      return;
     }
     const data = await toDataUrl(f);
     selectedIcon = {
-      kind: 'asset-temp', dataUrl: data, label: 'Uploaded icon'
+      kind: 'asset-temp',
+      dataUrl: data,
+      label: 'Uploaded icon',
     };
     await renderChoices([selectedIcon]);
-    openCrop(data)
+    openCrop(data);
   }
   // ---------------------------------------------------------------------------
   // Icon crop editor
@@ -1337,55 +1517,64 @@
   function openCrop(data) {
     if (!data) {
       toast('No crop source is available for this icon.');
-      return
+      return;
     }
     crop = {
-      src: data, img: new Image(), zoom: 1, rotation: 0, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0
+      src: data,
+      img: new Image(),
+      zoom: 1,
+      rotation: 0,
+      x: 0,
+      y: 0,
+      dragging: false,
+      lastX: 0,
+      lastY: 0,
     };
     crop.img.onload = () => {
       cropResetState();
-      drawCrop(true)
+      drawCrop(true);
     };
     crop.img.onerror = () => {
       toast('GridLand could not load this icon for cropping.');
-      if (els.cropDialog.open)els.cropDialog.close()
+      if (els.cropDialog.open) els.cropDialog.close();
     };
     crop.img.src = data;
     els.cropZoom.value = 100;
     els.cropTransparent.checked = true;
     els.cropBgRow.classList.add('hidden');
-    els.cropDialog.showModal()
+    els.cropDialog.showModal();
   }
   function cropResetState() {
-    if (!crop.img)return;
+    if (!crop.img) return;
     const c = els.cropCanvas;
-    const scale = Math.max(c.width/crop.img.width, c.height/crop.img.height);
+    const scale = Math.max(c.width / crop.img.width, c.height / crop.img.height);
     crop.zoom = scale;
     crop.rotation = 0;
-    crop.x = c.width/2;
-    crop.y = c.height/2;
-    els.cropZoom.value = 100
+    crop.x = c.width / 2;
+    crop.y = c.height / 2;
+    els.cropZoom.value = 100;
   }
   function drawCrop(showGuides = true) {
-    const c = els.cropCanvas, ctx = c.getContext('2d');
+    const c = els.cropCanvas,
+      ctx = c.getContext('2d');
     ctx.clearRect(0, 0, c.width, c.height);
     if (!els.cropTransparent.checked) {
       ctx.fillStyle = els.cropBg.value;
-      ctx.fillRect(0, 0, c.width, c.height)
+      ctx.fillRect(0, 0, c.width, c.height);
     }
-    if (!crop.img)return;
+    if (!crop.img) return;
     ctx.save();
     ctx.translate(crop.x, crop.y);
-    ctx.rotate(crop.rotation * Math.PI/180);
+    ctx.rotate((crop.rotation * Math.PI) / 180);
     ctx.scale(crop.zoom, crop.zoom);
-    ctx.drawImage(crop.img, - crop.img.width/2, - crop.img.height/2);
+    ctx.drawImage(crop.img, -crop.img.width / 2, -crop.img.height / 2);
     ctx.restore();
     if (showGuides) {
       ctx.strokeStyle = 'rgba(255,255,255,.85)';
       ctx.setLineDash([5, 5]);
-      ctx.strokeRect(c.width/3, 0, c.width/3, c.height);
-      ctx.strokeRect(0, c.height/3, c.width, c.height/3);
-      ctx.setLineDash([])
+      ctx.strokeRect(c.width / 3, 0, c.width / 3, c.height);
+      ctx.strokeRect(0, c.height / 3, c.width, c.height / 3);
+      ctx.setLineDash([]);
     }
   }
   async function applyCrop() {
@@ -1393,10 +1582,12 @@
     const data = els.cropCanvas.toDataURL('image/png');
     drawCrop(true);
     selectedIcon = {
-      kind: 'asset-temp', dataUrl: data, label: 'Cropped icon'
+      kind: 'asset-temp',
+      dataUrl: data,
+      label: 'Cropped icon',
     };
     els.cropDialog.close();
-    await renderChoices([selectedIcon])
+    await renderChoices([selectedIcon]);
   }
   // ---------------------------------------------------------------------------
   // Group dialog and group editing
@@ -1404,166 +1595,183 @@
 
   async function openFolder(fid) {
     const f = state.folders[fid];
-    if (!f)return;
+    if (!f) return;
     folderContextId = fid;
     els.folderTitleDisplay.textContent = f.title;
     await renderFolder(fid);
     els.folderDialog.showModal();
-    placeEditBanner()
+    placeEditBanner();
   }
   async function renderFolder(fid) {
     const f = state.folders[fid];
     if (!f) {
-      if (els.folderDialog.open)els.folderDialog.close();
-      return
+      if (els.folderDialog.open) els.folderDialog.close();
+      return;
     }
     els.folderTitleDisplay.textContent = f.title;
     const frag = document.createDocumentFragment();
-    for (const it of f.items)frag.appendChild(await makeShortcut(it, {
-      folderId: fid
-    }));
-    els.folderGrid.replaceChildren(frag)
+    for (const it of f.items)
+      frag.appendChild(
+        await makeShortcut(it, {
+          folderId: fid,
+        })
+      );
+    els.folderGrid.replaceChildren(frag);
   }
   function openGroupEdit(fid) {
     const f = state.folders[fid];
-    if (!f)return;
+    if (!f) return;
     groupEditingId = fid;
     els.groupNameInput.value = f.title;
-    els.groupEditDialog.showModal()
+    els.groupEditDialog.showModal();
   }
   async function saveGroup(e) {
     e.preventDefault();
     const f = state.folders[groupEditingId];
-    if (!f)return;
+    if (!f) return;
     f.title = els.groupNameInput.value.trim() || `Group ${state.groupCounter++}`;
     for (const p of state.pages) {
       const shell = p.items.find(x => x.type === 'folder' && x.folderId === groupEditingId);
-      if (shell)shell.title = f.title
+      if (shell) shell.title = f.title;
     }
     await save();
     els.groupEditDialog.close();
-    await render()
+    await render();
   }
   async function deleteGroup() {
     const f = state.folders[groupEditingId];
-    if (!f)return;
-    if (f.items.length && !confirm(`Delete ${f.title} and all ${f.items.length} icons?`))return;
+    if (!f) return;
+    if (f.items.length && !confirm(`Delete ${f.title} and all ${f.items.length} icons?`)) return;
     deleteFolderShell(groupEditingId);
     await save();
     els.groupEditDialog.close();
-    await render()
+    await render();
   }
   // ---------------------------------------------------------------------------
   // Page deletion and backup
   // ---------------------------------------------------------------------------
 
   function requestDeleteCurrentPage() {
-    if (state.pages.length <= 1)return;
+    if (state.pages.length <= 1) return;
     const count = page().items.length;
-    els.deletePageMessage.textContent = count ? 'All items on this page will be deleted': 'Delete this empty page?';
-    els.deletePageDialog.showModal()
+    els.deletePageMessage.textContent = count
+      ? 'All items on this page will be deleted'
+      : 'Delete this empty page?';
+    els.deletePageDialog.showModal();
   }
   async function confirmDeleteCurrentPage() {
-    if (state.pages.length <= 1)return;
+    if (state.pages.length <= 1) return;
     const doomed = page();
     for (const it of doomed.items) {
       if (it.type === 'folder') {
         const f = state.folders[it.folderId];
-        for (const c of f?.items || [])if (c.icon?.kind === 'asset')await assetDel(c.icon.assetId);
-        delete state.folders[it.folderId]
-      } else if (it.icon?.kind === 'asset')await assetDel(it.icon.assetId)
+        for (const c of f?.items || [])
+          if (c.icon?.kind === 'asset') await assetDel(c.icon.assetId);
+        delete state.folders[it.folderId];
+      } else if (it.icon?.kind === 'asset') await assetDel(it.icon.assetId);
     }
     state.pages.splice(state.currentPage, 1);
     pruneEmptyPages();
     state.currentPage = Math.min(state.currentPage, state.pages.length - 1);
     els.deletePageDialog.close();
     await save();
-    await render()
+    await render();
   }
   async function exportBackup() {
     try {
       const payload = {
-        app: 'GridLand', formatVersion: 3, exportedAt: new Date().toISOString(), state, assets: await assetAll()
+        app: 'GridLand',
+        formatVersion: 3,
+        exportedAt: new Date().toISOString(),
+        state,
+        assets: await assetAll(),
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: 'application/json'
-      }), url = URL.createObjectURL(blob);
-      await chrome.downloads.download( {
-        url, filename: `gridland-backup-${new Date().toISOString().slice(0,10)}.json`, saveAs: true
+          type: 'application/json',
+        }),
+        url = URL.createObjectURL(blob);
+      await chrome.downloads.download({
+        url,
+        filename: `gridland-backup-${new Date().toISOString().slice(0, 10)}.json`,
+        saveAs: true,
       });
-      setTimeout(() => URL.revokeObjectURL(url), 5000)
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (e) {
       console.error(e);
-      toast('Export failed. Check Chrome download permissions.')
+      toast('Export failed. Check Chrome download permissions.');
     }
   }
   async function importBackup(f) {
-    if (!f)return;
+    if (!f) return;
     try {
       const p = JSON.parse(await f.text());
-      if (p.app !== 'GridLand' || !p.state)throw 0;
+      if (p.app !== 'GridLand' || !p.state) throw 0;
       state = normalize(p.state);
-      await assetReplace(p.assets || {
-      });
+      await assetReplace(p.assets || {});
       await save();
       sync();
       await appearance();
       await render();
-      toast('Backup imported.')
+      toast('Backup imported.');
     } catch {
-      toast('Could not import that file.')
+      toast('Could not import that file.');
     }
-    els.importInput.value = ''
+    els.importInput.value = '';
   }
   // ---------------------------------------------------------------------------
   // Global event binding and startup
   // ---------------------------------------------------------------------------
 
   function handleEdgeDrag(e) {
-    if (!editing || !dragInfo || ((e.clientX === 0) && (e.clientY === 0)))return;
+    if (!editing || !dragInfo || (e.clientX === 0 && e.clientY === 0)) return;
     let dir = 0;
-    if (e.clientX < 70)dir = - 1;
-    else if (e.clientX > innerWidth - 70)dir = 1;
+    if (e.clientX < 70) dir = -1;
+    else if (e.clientX > innerWidth - 70) dir = 1;
     els.edgeLeftIndicator.classList.toggle('active', dir < 0);
     els.edgeRightIndicator.classList.toggle('active', dir > 0);
     if (!dir) {
       clearTimeout(edgeTimer);
       edgeTimer = null;
-      return
+      return;
     }
-    if (edgeTimer)return;
-    edgeTimer = setTimeout(async() => {
+    if (edgeTimer) return;
+    edgeTimer = setTimeout(async () => {
       edgeTimer = null;
       const sourcePageId = state.pages[state.currentPage]?.id;
       let targetIndex = state.currentPage + dir;
       if (targetIndex < 0) {
-        state.pages.unshift( {
-          id: crypto.randomUUID(), items: []
+        state.pages.unshift({
+          id: crypto.randomUUID(),
+          items: [],
         });
-        targetIndex = 0
+        targetIndex = 0;
       } else if (targetIndex >= state.pages.length) {
-        state.pages.push( {
-          id: crypto.randomUUID(), items: []
+        state.pages.push({
+          id: crypto.randomUUID(),
+          items: [],
         });
-        targetIndex = state.pages.length - 1
+        targetIndex = state.pages.length - 1;
       }
       const targetId = state.pages[targetIndex].id;
       const m = take(dragInfo.itemId);
-      if (!m)return;
+      if (!m) return;
       if (state.pages[targetIndex].items.length >= cap()) {
         toast('That page is full.');
         const restore = state.pages.findIndex(p => p.id === sourcePageId);
         state.pages[Math.max(0, restore)].items.push(m);
-        return
+        return;
       }
       state.pages[targetIndex].items.push(m);
       pruneEmptyPages();
-      state.currentPage = Math.max(0, state.pages.findIndex(p => p.id === targetId));
+      state.currentPage = Math.max(
+        0,
+        state.pages.findIndex(p => p.id === targetId)
+      );
       await save();
       await render();
       els.edgeLeftIndicator.classList.remove('active');
-      els.edgeRightIndicator.classList.remove('active')
-    }, 650)
+      els.edgeRightIndicator.classList.remove('active');
+    }, 650);
   }
   function bindCoreEvents() {
     fill(els.columnsSelect, 4, 10);
@@ -1577,9 +1785,9 @@
     els.doneEditing.onclick = exitEdit;
     els.deletePageEdit.onclick = requestDeleteCurrentPage;
     els.addSiteButton.onclick = () => openAdd();
-    els.editLayoutButton.onclick = async() => {
+    els.editLayoutButton.onclick = async () => {
       closeSettings();
-      await enterEdit()
+      await enterEdit();
     };
   }
 
@@ -1609,34 +1817,35 @@
 
     settingsControls.forEach(control => {
       control.addEventListener('input', settingsChange);
-      control.addEventListener('change', settingsChange)
+      control.addEventListener('change', settingsChange);
     });
 
-    els.wallpaperInput.onchange = async() => {
+    els.wallpaperInput.onchange = async () => {
       const f = els.wallpaperInput.files?.[0];
-      if (!f)return;
+      if (!f) return;
       if (f.size > 12_000_000) {
         toast('Wallpaper must be under 12 MB.');
-        return
+        return;
       }
       const id = 'wallpaper-' + crypto.randomUUID();
-      if (state.settings.wallpaperAssetId)await assetDel(state.settings.wallpaperAssetId);
+      if (state.settings.wallpaperAssetId) await assetDel(state.settings.wallpaperAssetId);
       await assetPut(id, await toDataUrl(f));
       state.settings.wallpaperAssetId = id;
-      if (state.settings.backgroundMode === 'gradient')state.settings.backgroundMode = 'wallpaper-gradient';
+      if (state.settings.backgroundMode === 'gradient')
+        state.settings.backgroundMode = 'wallpaper-gradient';
       await save();
       sync();
       await appearance();
-      els.wallpaperInput.value = ''
+      els.wallpaperInput.value = '';
     };
 
-    els.clearWallpaper.onclick = async() => {
+    els.clearWallpaper.onclick = async () => {
       await assetDel(state.settings.wallpaperAssetId);
       state.settings.wallpaperAssetId = null;
       state.settings.backgroundMode = 'gradient';
       await save();
       sync();
-      await appearance()
+      await appearance();
     };
   }
 
@@ -1650,24 +1859,24 @@
       const raw = els.siteUrl.value.trim();
       let host = raw;
       try {
-        host = new URL(navUrl(raw)).hostname
-      } catch {
-      }
+        host = new URL(navUrl(raw)).hostname;
+      } catch {}
       const q = encodeURIComponent((host || raw || 'website') + ' logo png');
-      window.open('https://www.google.com/search?tbm=isch&q=' + q, '_blank', 'noopener')
+      window.open('https://www.google.com/search?tbm=isch&q=' + q, '_blank', 'noopener');
     };
 
     els.customIconInput.onchange = () => uploadIcon(els.customIconInput.files?.[0]);
 
-    els.cropSelectedButton.onclick = async() => {
-      if (selectedIcon?.kind === 'asset-temp')return openCrop(selectedIcon.dataUrl);
+    els.cropSelectedButton.onclick = async () => {
+      if (selectedIcon?.kind === 'asset-temp') return openCrop(selectedIcon.dataUrl);
       if (selectedIcon?.kind === 'asset') {
         const d = await assetGet(selectedIcon.assetId);
-        if (d)return openCrop(d);
+        if (d) return openCrop(d);
         toast('The saved icon image could not be loaded.');
-        return
+        return;
       }
-      if (selectedIcon?.kind === 'favicon')return openCrop(favUrl(els.siteUrl.value, Math.max(128, selectedIcon.size || 128)));
+      if (selectedIcon?.kind === 'favicon')
+        return openCrop(favUrl(els.siteUrl.value, Math.max(128, selectedIcon.size || 128)));
       if (selectedIcon?.kind === 'remote') {
         els.cropSelectedButton.disabled = true;
         els.iconLookupStatus.textContent = 'Loading the selected image for cropping…';
@@ -1675,21 +1884,24 @@
         els.cropSelectedButton.disabled = false;
         if (d) {
           selectedIcon = {
-            kind: 'asset-temp', dataUrl: d, label: selectedIcon.label || 'Site image'
+            kind: 'asset-temp',
+            dataUrl: d,
+            label: selectedIcon.label || 'Site image',
           };
-          return openCrop(d)
+          return openCrop(d);
         }
-        els.iconLookupStatus.textContent = 'That image could not be loaded for cropping. You can still use it directly or upload a copy.';
-        return
+        els.iconLookupStatus.textContent =
+          'That image could not be loaded for cropping. You can still use it directly or upload a copy.';
+        return;
       }
-      toast('Select an image or favicon before cropping.')
+      toast('Select an image or favicon before cropping.');
     };
 
-    els.deleteSiteButton.onclick = async() => {
+    els.deleteSiteButton.onclick = async () => {
       if (editingItem) {
         const id = editingItem.id;
         els.siteDialog.close();
-        await deleteItem(id)
+        await deleteItem(id);
       }
     };
   }
@@ -1701,25 +1913,28 @@
 
     els.rotateLeft.onclick = () => {
       crop.rotation -= 90;
-      drawCrop()
+      drawCrop();
     };
     els.rotateRight.onclick = () => {
       crop.rotation += 90;
-      drawCrop()
+      drawCrop();
     };
     els.cropReset.onclick = () => {
       cropResetState();
-      drawCrop()
+      drawCrop();
     };
     els.cropZoom.oninput = () => {
-      if (!crop.img)return;
-      const base = Math.max(els.cropCanvas.width/crop.img.width, els.cropCanvas.height/crop.img.height);
-      crop.zoom = base * (+els.cropZoom.value/100);
-      drawCrop()
+      if (!crop.img) return;
+      const base = Math.max(
+        els.cropCanvas.width / crop.img.width,
+        els.cropCanvas.height / crop.img.height
+      );
+      crop.zoom = base * (+els.cropZoom.value / 100);
+      drawCrop();
     };
     els.cropTransparent.onchange = () => {
       els.cropBgRow.classList.toggle('hidden', els.cropTransparent.checked);
-      drawCrop()
+      drawCrop();
     };
     els.cropBg.oninput = drawCrop;
 
@@ -1727,30 +1942,33 @@
       crop.dragging = true;
       crop.lastX = e.clientX;
       crop.lastY = e.clientY;
-      els.cropCanvas.setPointerCapture(e.pointerId)
+      els.cropCanvas.setPointerCapture(e.pointerId);
     });
     els.cropCanvas.addEventListener('pointermove', e => {
-      if (!crop.dragging)return;
-      const r = els.cropCanvas.getBoundingClientRect(), sx = els.cropCanvas.width/r.width, sy = els.cropCanvas.height/r.height;
+      if (!crop.dragging) return;
+      const r = els.cropCanvas.getBoundingClientRect(),
+        sx = els.cropCanvas.width / r.width,
+        sy = els.cropCanvas.height / r.height;
       crop.x += (e.clientX - crop.lastX) * sx;
       crop.y += (e.clientY - crop.lastY) * sy;
       crop.lastX = e.clientX;
       crop.lastY = e.clientY;
-      drawCrop()
+      drawCrop();
     });
-    els.cropCanvas.addEventListener('pointerup', () => crop.dragging = false);
+    els.cropCanvas.addEventListener('pointerup', () => (crop.dragging = false));
   }
 
   function bindGroupAndBackupEvents() {
     els.closeFolderDialog.onclick = () => els.folderDialog.close();
     els.folderDialog.addEventListener('click', e => {
-      if (e.target !== els.folderDialog)return;
+      if (e.target !== els.folderDialog) return;
       const r = els.folderDialog.getBoundingClientRect();
-      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)els.folderDialog.close()
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)
+        els.folderDialog.close();
     });
     els.folderDialog.addEventListener('close', () => {
       folderContextId = null;
-      placeEditBanner()
+      placeEditBanner();
     });
 
     els.closeDeletePageDialog.onclick = () => els.deletePageDialog.close();
@@ -1770,23 +1988,52 @@
       clearTimeout(edgeTimer);
       edgeTimer = null;
       els.edgeLeftIndicator.classList.remove('active');
-      els.edgeRightIndicator.classList.remove('active')
+      els.edgeRightIndicator.classList.remove('active');
     });
 
     window.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && editing && !els.siteDialog.open && !els.folderDialog.open && !els.groupEditDialog.open)exitEdit();
-      if (e.key === 'ArrowLeft' && !els.settingsPanel.classList.contains('open') && !els.siteDialog.open && !els.folderDialog.open)go(state.currentPage - 1);
-      if (e.key === 'ArrowRight' && !els.settingsPanel.classList.contains('open') && !els.siteDialog.open && !els.folderDialog.open)go(state.currentPage + 1)
+      if (
+        e.key === 'Escape' &&
+        editing &&
+        !els.siteDialog.open &&
+        !els.folderDialog.open &&
+        !els.groupEditDialog.open
+      )
+        exitEdit();
+      if (
+        e.key === 'ArrowLeft' &&
+        !els.settingsPanel.classList.contains('open') &&
+        !els.siteDialog.open &&
+        !els.folderDialog.open
+      )
+        go(state.currentPage - 1);
+      if (
+        e.key === 'ArrowRight' &&
+        !els.settingsPanel.classList.contains('open') &&
+        !els.siteDialog.open &&
+        !els.folderDialog.open
+      )
+        go(state.currentPage + 1);
     });
 
-    window.addEventListener('wheel', e => {
-      if (wheelLock || els.settingsPanel.classList.contains('open') || els.siteDialog.open || els.folderDialog.open)return;
-      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX: e.deltaY;
-      if (Math.abs(d) < 55)return;
-      wheelLock = true;
-      go(state.currentPage + (d > 0 ? 1: -1));
-      setTimeout(() => wheelLock = false, 420)
-    }, { passive: true })
+    window.addEventListener(
+      'wheel',
+      e => {
+        if (
+          wheelLock ||
+          els.settingsPanel.classList.contains('open') ||
+          els.siteDialog.open ||
+          els.folderDialog.open
+        )
+          return;
+        const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        if (Math.abs(d) < 55) return;
+        wheelLock = true;
+        go(state.currentPage + (d > 0 ? 1 : -1));
+        setTimeout(() => (wheelLock = false), 420);
+      },
+      { passive: true }
+    );
   }
 
   function bind() {
@@ -1795,7 +2042,7 @@
     bindSiteEditorEvents();
     bindCropEditorEvents();
     bindGroupAndBackupEvents();
-    bindGlobalEvents()
+    bindGlobalEvents();
   }
 
   async function init() {
@@ -1803,10 +2050,10 @@
     bind();
     sync();
     await appearance();
-    await render()
+    await render();
   }
-  init().catch (e => {
+  init().catch(e => {
     console.error(e);
-    toast('GridLand failed to start.')
+    toast('GridLand failed to start.');
   });
 })();
