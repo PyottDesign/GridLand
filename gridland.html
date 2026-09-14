@@ -7,12 +7,16 @@
   <link rel="stylesheet" href="gridland.css">
 </head>
 <body>
+  <!-- Background layers -->
   <div id="wallpaperLayer" aria-hidden="true"></div>
   <div id="gradientLayer" aria-hidden="true"></div>
   <div id="shadeLayer" aria-hidden="true"></div>
 
+  <!-- Main new-tab interface -->
   <main id="app">
-    <button id="settingsButton" class="corner-button" type="button" aria-label="Open settings"><img src="icons/gridland-settings.png" alt=""></button>
+    <button id="settingsButton" class="corner-button" type="button" aria-label="Open settings">
+      <img src="icons/gridland-settings.png" alt="">
+    </button>
 
     <section id="pageViewport">
       <button id="prevPage" class="page-arrow left" type="button" aria-label="Previous page">‹</button>
@@ -32,13 +36,20 @@
     <div id="edgeRightIndicator" class="edge-slot-indicator right" aria-hidden="true"></div>
   </main>
 
+  <!-- Settings panel -->
   <div id="panelScrim" class="panel-scrim hidden"></div>
   <aside id="settingsPanel" class="side-panel" aria-hidden="true">
-    <header class="panel-header"><h1>GridLand</h1><button id="closeSettings" class="icon-button" type="button">×</button></header>
+    <header class="panel-header">
+      <h1>GridLand</h1>
+      <button id="closeSettings" class="icon-button" type="button">×</button>
+    </header>
     <div class="panel-body">
       <section class="settings-card">
         <h2>Sites</h2>
-        <div class="button-row"><button id="addSiteButton" class="primary-button" type="button">+ Add site</button><button id="editLayoutButton" type="button">Edit Layout</button></div>
+        <div class="button-row">
+          <button id="addSiteButton" class="primary-button" type="button">+ Add site</button>
+          <button id="editLayoutButton" type="button">Edit Layout</button>
+        </div>
       </section>
 
       <section class="settings-card">
@@ -87,13 +98,20 @@
 
       <section class="settings-card">
         <h2>Backup</h2>
-        <div class="button-row"><button id="exportButton" type="button">Export settings</button><label class="button-like">Import settings<input id="importInput" type="file" accept="application/json,.json"></label></div>
+        <div class="button-row">
+          <button id="exportButton" type="button">Export settings</button>
+          <label class="button-like">
+            Import settings
+            <input id="importInput" type="file" accept="application/json,.json">
+          </label>
+        </div>
         <p class="small-note">Backup includes pages, groups, custom icons, wallpaper and appearance settings.</p>
       </section>
       <a class="settings-footer-link" href="https://www.pyottdesign.com" target="_blank" rel="noopener noreferrer">www.pyottdesign.com</a>
     </div>
   </aside>
 
+  <!-- Site editor -->
   <dialog id="siteDialog">
     <form id="siteForm">
       <div class="dialog-header"><h2 id="siteDialogTitle">Add site</h2><button id="closeSiteDialog" class="icon-button" type="button">×</button></div>
@@ -107,6 +125,7 @@
     </form>
   </dialog>
 
+  <!-- Icon crop editor -->
   <dialog id="cropDialog" class="crop-dialog">
     <div class="dialog-header"><h2>Customize icon</h2><button id="closeCropDialog" class="icon-button" type="button">×</button></div>
     <div class="crop-layout">
@@ -121,11 +140,13 @@
     <div class="dialog-actions"><span class="spacer"></span><button id="cropCancel" type="button">Cancel</button><button id="cropApply" class="primary-button" type="button">Use crop</button></div>
   </dialog>
 
+  <!-- Group browser -->
   <dialog id="folderDialog" class="folder-dialog">
     <div class="dialog-header"><h2 id="folderTitleDisplay">Group</h2><button id="closeFolderDialog" class="icon-button" type="button">×</button></div>
     <div id="folderGrid" class="folder-grid"></div>
   </dialog>
 
+  <!-- Confirmation dialogs -->
   <dialog id="deletePageDialog">
     <div class="dialog-header"><h2>Delete page?</h2><button id="closeDeletePageDialog" class="icon-button" type="button">×</button></div>
     <p id="deletePageMessage">Delete this page?</p>
@@ -140,6 +161,7 @@
     </form>
   </dialog>
 
+  <!-- Notifications -->
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
   <script src="gridland.js"></script>
 </body>
